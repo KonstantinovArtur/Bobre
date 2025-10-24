@@ -1,0 +1,87 @@
+:root{
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --muted: #6b7280;
+    --accent: #1f2937;
+    --primary: #2b6cb0;
+    --accent-2: #F59E0B;
+    --success: #10b981;
+    --danger: #ef4444;
+    --pill: #f3f4f6;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+*{box-sizing:border-box}
+body.site{background:var(--bg); color:var(--accent); margin:0; line-height:1.45}
+.container{max-width:1100px; margin:0 auto; padding:0 16px}
+
+/* HEADER */
+.site-header{background:var(--surface); border-bottom:1px solid #e6e6e6; position:sticky; top:0; z-index:40}
+.header-row{display:flex; align-items:center; gap:12px; padding:12px 0}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--accent)}
+.brand-logo{width:40px; height:40px; object-fit:cover; border-radius:6px}
+.brand-title{font-weight:700; font-size:18px}
+.nav{display:flex; gap:14px; margin-left:18px}
+.nav a{color:var(--accent); text-decoration:none; font-weight:500}
+.tools{margin-left:auto; display:flex; gap:8px; align-items:center}
+.icon-link{padding:6px; font-size:18px; text-decoration:none}
+.user-name{margin-right:6px; font-weight:600}
+
+/* Buttons */
+.btn{display:inline-block; padding:8px 12px; border-radius:8px; text-decoration:none; background:var(--primary); color:white; border:none; cursor:pointer}
+.btn:hover{opacity:0.95}
+.btn-ghost{background:transparent; color:var(--primary); border:1px solid #d3dce6}
+.btn-sm{padding:6px 8px; font-size:13px}
+.btn-outline{background:transparent; border:1px solid #e5e7eb; color:var(--accent)}
+
+/* MAIN */
+.main-content{padding:28px 0}
+
+/* PAGE HEAD */
+.page-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px}
+.page-head h1{margin:0; font-size:28px}
+.search-form{display:flex; gap:8px}
+.search-form input{padding:8px 10px; border-radius:8px; border:1px solid #e6e6e6; min-width:260px}
+.search-form button{padding:8px 10px; border-radius:8px; border:none; background:var(--primary); color:white}
+
+/* GRID */
+.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+@media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:640px){ .grid{grid-template-columns:1fr} }
+
+/* CARD */
+.card{background:var(--surface); border-radius:12px; box-shadow:0 6px 18px rgba(15,23,42,0.04); overflow:hidden; display:flex; flex-direction:column}
+.card-media{display:block; position:relative; text-decoration:none}
+.thumb{width:100%; height:180px; object-fit:cover; display:block; background:#f6f6f6}
+.promo{position:absolute; left:10px; top:10px; background:var(--accent-2); color:white; padding:6px 8px; font-weight:700; border-radius:6px; font-size:13px}
+
+/* BODY */
+.card-body{padding:14px; display:flex; flex-direction:column; gap:10px}
+.card-title{font-size:16px; font-weight:700; color:var(--accent); text-decoration:none}
+.meta-row{display:flex; justify-content:space-between; align-items:center; gap:10px; color:var(--muted); font-size:13px}
+.category{font-weight:600; color:#475569}
+.rating{display:flex; gap:6px; align-items:center}
+.star{color:#e6e6e6; font-size:14px}
+.star.filled{color:#f59e0b}
+
+/* PRICE */
+.price-row{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.price-old{color:var(--muted); text-decoration:line-through; margin-right:8px}
+.price-new{font-size:18px; color:var(--accent); font-weight:800}
+.discount{background:#fee2b3; color:#b45309; padding:4px 6px; border-radius:6px; font-weight:700}
+.stock{font-size:13px; color:var(--muted)}
+.stock.low{color:var(--danger); font-weight:700}
+
+/* ACTIONS */
+.card-actions{display:flex; gap:8px; align-items:center; margin-top:8px}
+
+/* EMPTY */
+.empty{padding:40px; text-align:center; color:var(--muted)}
+
+/* FOOTER */
+.site-footer{background:#0f1724; color:#cbd5e1; margin-top:36px}
+.footer-grid{display:flex; gap:30px; padding:28px 0; align-items:flex-start}
+.footer-col h4{color:white; margin:0 0 8px 0}
+.footer-col p, .footer-col a{color:#cbd5e1; text-decoration:none}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.04); padding:12px 0; text-align:center; font-size:13px}
+@media (max-width:680px){ .footer-grid{flex-direction:column} }

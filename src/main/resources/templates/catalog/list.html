@@ -1,0 +1,22 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('Каталог', ~{::section})">
+<section>
+    <h1>Каталог кузницы</h1>
+
+    <div th:each="p : ${items}" class="card">
+        <div style="display:flex;align-items:center">
+            <img class="thumb" th:src="@{|/products/${p.productId}/image|}" alt="img"/>
+            <div>
+                <a th:href="@{|/products/${p.productId}|}" th:text="${p.name}">Название</a>
+                <div>
+                    <span th:text="${p.categoryName}">Категория</span> ·
+                    <b th:text="${#numbers.formatDecimal(p.priceFinal,1,'COMMA',2,'POINT')}">0.00</b>
+                    <span th:classappend="${p.stockQty <= 3} ? 'low-stock' : ''"
+                          th:text="'В наличии: ' + ${p.stockQty} + ' шт'">В наличии</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

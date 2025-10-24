@@ -1,0 +1,25 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('Вход', ~{::section})">
+<section>
+    <h1>Вход</h1>
+
+    <div th:if="${param.error}" class="error">Неверный логин или пароль</div>
+    <div th:if="${param.registered}" class="success">Регистрация успешна — войдите</div>
+
+    <form th:action="@{/login}" method="post">
+        <label>Логин
+            <input type="text" name="login" required>      <!-- было username -->
+        </label>
+        <br/>
+        <label>Пароль
+            <input type="password" name="password" required>
+        </label>
+        <br/>
+        <button type="submit">Войти</button>
+    </form>
+
+
+    <p>Нет аккаунта? <a th:href="@{/register}">Регистрация</a></p>
+</section>
+</html>

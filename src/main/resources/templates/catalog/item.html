@@ -1,0 +1,28 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout(${item.name}, ~{::section})">
+<section>
+    <a href="/products">← назад</a>
+    <h1 th:text="${item.name}">Товар</h1>
+    <img th:src="@{|/products/${item.productId}/image|}" alt="img" style="max-width:320px;border-radius:12px"/>
+    <p th:text="${item.description}">Описание</p>
+    <p>Категория: <b th:text="${item.categoryName}"></b></p>
+    <p>Цена: <b th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')}"></b></p>
+    <p>Рейтинг: <span th:text="${item.avgRating}">0</span> (отзывов: <span th:text="${item.reviewsCount}">0</span>)</p>
+    <p>Остаток на складе: <b th:text="${item.stockQty}">0</b> шт</p>
+    <h2 id="reviews">Отзывы</h2>
+    <div th:if="${#lists.isEmpty(reviews)}" class="muted">Пока нет отзывов.</div>
+
+    <div th:if="${!#lists.isEmpty(reviews)}">
+        <div class="review" th:each="r : ${reviews}">
+            <div class="review-head">
+                <strong th:text="${r.userLogin}">user</strong>
+                <span th:utext="${#strings.repeat('★', r.rating)} + ${#strings.repeat('☆', 5 - r.rating)}">★★★☆☆</span>
+                <time th:text="${#temporals.format(r.createdAt, 'dd.MM.yyyy HH:mm')}">дата</time>
+            </div>
+            <p th:text="${r.comment}">Комментарий…</p>
+        </div>
+    </div>
+
+</section>
+</html>

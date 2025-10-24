@@ -1,0 +1,33 @@
+package ru.forge.blacksmith_shop.users.repo;
+
+import org.springframework.data.jpa.repository.*;
+import ru.forge.blacksmith_shop.users.domain.User;
+import ru.forge.blacksmith_shop.users.dto.UserRow;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Integer> {
+
+    Optional<User> findByLogin(String login);
+    Optional<User> findByEmail(String email);
+
+    @Query("""
+    select new ru.forge.blacksmith_shop.users.dto.UserRow(
+      u.userId, u.login, u.email, r.roleName, u.createdAt
+    )
+    from User u
+      join u.role r
+    order by u.createdAt desc, u.userId desc
+  """)
+    List<UserRow> findAllRows();
+
+    // (опционально) пагинация:
+    // @Query(value = """
+    //   select new ru.forge.blacksmith_shop.users.dto.UserRow(
+    //     u.userId, u.login, u.email, r.roleName, u.createdAt
+    //   )
+    //   from User u join u.role r
+    // """, countQuery = "select count(u) from User u")
+    // Page<UserRow> findAllRows(Pageable pageable);
+}
