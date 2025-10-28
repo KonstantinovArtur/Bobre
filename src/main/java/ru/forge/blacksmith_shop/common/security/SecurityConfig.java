@@ -1,21 +1,29 @@
+// src/main/java/ru/forge/blacksmith_shop/common/security/SecurityConfig.java
 package ru.forge.blacksmith_shop.common.security;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import ru.forge.blacksmith_shop.cart.CartLogoutHandler;
+import ru.forge.blacksmith_shop.fav.Favorites;
+import ru.forge.blacksmith_shop.fav.FavoritesLogoutHandler;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+    @Autowired
+    private CartLogoutHandler cartLogoutHandler;
+    @Autowired
+    private FavoritesLogoutHandler favoritesLogoutHandler;
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // strength=10 по умолчанию
-    }
+    public BCryptPasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
@@ -33,21 +41,22 @@ public class SecurityConfig {
                         .requestMatchers("/", "/products/**", "/images/**", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/register", "/login", "/error").permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("Admin", "Manager")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .loginProcessingUrl("/login")     // POST сюда
-                        .usernameParameter("login")       // <-- читаем поле "login"
-                        .passwordParameter("password")    // <-- читаем поле "password"
+                        .loginProcessingUrl("/login")
+                        .usernameParameter("login")
+                        .passwordParameter("password")
                         .defaultSuccessUrl("/", true)
                         .failureUrl("/login?error")
-                        .permitAll()
-                )
+                        .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
-                );
+                        .addLogoutHandler(cartLogoutHandler)  // <- сохраняем корзину ДО инвалидирования сессии
+                        .logoutSuccessHandler(favoritesLogoutHandler)
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .logoutSuccessUrl("/"));
 
         return http.build();
     }

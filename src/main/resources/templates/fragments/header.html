@@ -1,0 +1,46 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:fragment="header">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${title} ?: 'Кузница'">Кузница</title>
+    <!-- при желании можно убрать строку ниже -->
+    <link rel="stylesheet" th:href="@{/css/site.css}">
+    <style>
+        body {font-family: system-ui, Arial, sans-serif; margin: 0; background: #f9f9f9;}
+        header {background:#222;color:#fff;}
+        header a {color:#fff;text-decoration:none;margin-right:10px}
+        header a:hover {text-decoration:underline}
+        .container {max-width:1000px;margin:0 auto;padding:10px 20px}
+        .user-info {float:right}
+        .btn-link {background:none;border:none;color:#fff;cursor:pointer;text-decoration:underline;padding:0}
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a th:href="@{/}">🏠 Главная</a>
+        <a th:href="@{/products}">Каталог</a>
+        <a th:href="@{/cart}">Корзина</a>
+
+        <span class="user-info">
+      <span sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">Войти</a> |
+        <a th:href="@{/register}">Регистрация</a>
+      </span>
+
+      <span sec:authorize="isAuthenticated()">
+        👤 <b sec:authentication="name">user</b>
+        <form th:action="@{/logout}" method="post" style="display:inline; margin-left:6px">
+          <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <a th:href="@{/profile}">Профиль</a>
+          <button type="submit" class="btn-link">Выйти</button>
+        </form>
+      </span>
+
+    </span>
+    </div>
+</header>
+
+<main class="container">

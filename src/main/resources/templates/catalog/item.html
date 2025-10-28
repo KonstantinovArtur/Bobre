@@ -1,28 +1,160 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout(${item.name}, ~{::section})">
-<section>
-    <a href="/products">← назад</a>
-    <h1 th:text="${item.name}">Товар</h1>
-    <img th:src="@{|/products/${item.productId}/image|}" alt="img" style="max-width:320px;border-radius:12px"/>
-    <p th:text="${item.description}">Описание</p>
-    <p>Категория: <b th:text="${item.categoryName}"></b></p>
-    <p>Цена: <b th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')}"></b></p>
-    <p>Рейтинг: <span th:text="${item.avgRating}">0</span> (отзывов: <span th:text="${item.reviewsCount}">0</span>)</p>
-    <p>Остаток на складе: <b th:text="${item.stockQty}">0</b> шт</p>
-    <h2 id="reviews">Отзывы</h2>
-    <div th:if="${#lists.isEmpty(reviews)}" class="muted">Пока нет отзывов.</div>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${item.name} ?: 'Товар'">Товар</title>
+</head>
 
-    <div th:if="${!#lists.isEmpty(reviews)}">
-        <div class="review" th:each="r : ${reviews}">
-            <div class="review-head">
-                <strong th:text="${r.userLogin}">user</strong>
-                <span th:utext="${#strings.repeat('★', r.rating)} + ${#strings.repeat('☆', 5 - r.rating)}">★★★☆☆</span>
-                <time th:text="${#temporals.format(r.createdAt, 'dd.MM.yyyy HH:mm')}">дата</time>
+<body>
+
+<!-- Header -->
+<div th:replace="fragments/header :: header"></div>
+
+<section>
+    <!-- локальные стили -->
+    <style>
+        .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+        @media (max-width: 960px){.wrap{grid-template-columns:1fr}}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}
+        .p16{padding:16px}.p20{padding:20px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb24{margin-bottom:24px}
+        .muted{color:#6b7280}.title{margin:0 0 4px;font-size:26px}
+        .row{display:flex;align-items:center;gap:10px}.between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+        .thumb{width:100%;max-width:560px;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#f3f4f6}
+        .chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid #e5e7eb;border-radius:999px;padding:4px 10px;font-size:12px;background:#f9fafb;color:#374151}
+        .price-lg{font-size:28px;font-weight:800}
+        .price-old{color:#9ca3af;text-decoration:line-through;margin-left:8px}
+        .badge{display:inline-block;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:2px 8px;border-radius:999px;font-size:12px}
+        .stock{font-weight:600}.stock.low{color:#b91c1c}.stock.ok{color:#065f46}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
+        .btn:disabled{opacity:.55;cursor:not-allowed}
+        .btn.ghost{background:#fff;color:#111827}
+        .kv{display:grid;grid-template-columns:160px 1fr;gap:6px 16px}
+        .hr{height:1px;background:#e5e7eb;margin:16px 0}
+        .rev{border-top:1px solid #eef2f7;padding-top:12px;margin-top:12px}
+        .stars{white-space:nowrap}
+        .container{max-width:1000px;margin:0 auto;padding:20px}
+        a.muted{color:#6b7280;text-decoration:none}
+        a.muted:hover{text-decoration:underline}
+    </style>
+
+    <div class="container">
+        <a href="/products" class="muted">← назад</a>
+
+        <div class="wrap">
+            <!-- Левая колонка: фото + описание -->
+            <div class="card p20">
+                <h1 class="title" th:text="${item.name}">Товар</h1>
+
+                <div class="row mb12">
+                    <span class="chip" th:text="${item.categoryName}">Категория</span>
+                    <span class="badge" th:if="${item.isPromotional}">Акция</span>
+                    <span class="chip" th:if="${item.avgRating != null}">
+              ★ <span th:text="${item.avgRating}">0</span> / 5
+            </span>
+                    <span class="chip" th:if="${item.reviewsCount != null}"
+                          th:text="${item.reviewsCount} + ' отзыв(ов)'">0 отзывов</span>
+                </div>
+
+                <img class="thumb mb16" th:src="@{|/products/${item.productId}/image|}" alt="img"/>
+
+                <div class="mb16">
+                    <div class="muted mb8">Описание</div>
+                    <p th:text="${item.description}">Описание товара…</p>
+                </div>
+
+                <!-- Характеристики (если переданы) -->
+                <div class="mb8" th:if="${specs != null}">
+                    <div class="muted mb8">Характеристики</div>
+                    <div class="kv">
+                        <div class="muted" th:each="s : ${specs}" th:text="${s.key}">Параметр</div>
+                        <div th:each="s : ${specs}" th:text="${s.value}">Значение</div>
+                    </div>
+                </div>
             </div>
-            <p th:text="${r.comment}">Комментарий…</p>
+
+            <!-- Правая колонка: цена/остаток/кнопка -->
+            <aside class="card p20">
+                <!-- Цена -->
+                <div class="mb12">
+            <span class="price-lg"
+                  th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
+                    <span class="price-old"
+                          th:if="${item.discountPercent != null and item.discountPercent > 0}"
+                          th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
+                </div>
+
+                <!-- Остаток -->
+                <div class="mb16"
+                     th:with="qty=${item.stockQty != null ? item.stockQty : 0}"
+                     th:classappend="${qty <= 3} ? ' stock low' : ' stock ok'">
+                    <span class="muted">Остаток на складе:</span>
+                    <span th:text="${qty} + ' шт'">0 шт</span>
+                </div>
+
+                <!-- Добавить в корзину -->
+                <form th:action="@{/cart/add}" method="post" class="mb8">
+                    <input th:if="${_csrf != null}" type="hidden"
+                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <input type="hidden" name="productId" th:value="${item.productId}"/>
+                    <div class="between mb12">
+                        <label class="muted" for="qty">Количество</label>
+                        <input id="qty" type="number" name="qty" value="1" min="1"
+                               th:attr="max=${item.stockQty}"
+                               style="width:84px;padding:8px;border:1px solid #e5e7eb;border-radius:8px"/>
+                    </div>
+                    <button class="btn" th:disabled="${item.stockQty == null or item.stockQty == 0}">
+                        🛒 В корзину
+                    </button>
+                </form>
+
+
+                <div class="hr"></div>
+
+                <!-- Краткие метки -->
+                <div class="chips">
+                    <span class="chip">ID: <span th:text="${item.productId}">0</span></span>
+                    <span class="chip" th:if="${item.isPromotional}">Скидка <span th:text="${item.discountPercent}">0</span>%</span>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Отзывы -->
+        <div class="card p20 mb24" style="margin-top:20px">
+            <div class="between mb12">
+                <h2 style="margin:0">Отзывы</h2>
+                <a href="#reviews" class="chip" th:text="${(reviews == null) ? 0 : #lists.size(reviews)} + ' шт'">0 шт</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(reviews)}" class="muted">Пока нет отзывов.</div>
+
+            <div th:if="${!#lists.isEmpty(reviews)}" id="reviews">
+                <div class="rev" th:each="r : ${reviews}">
+                    <div class="between">
+                        <div class="row">
+                            <strong th:text="${r.userLogin}">user</strong>
+                            <span class="stars">
+                  <span th:utext="${#strings.repeat('★', (r.rating == null ? 0 : r.rating.intValue()))}"></span>
+                  <span class="muted" th:utext="${#strings.repeat('☆', 5 - (r.rating == null ? 0 : r.rating.intValue()))}"></span>
+                </span>
+                        </div>
+                        <time class="muted" th:text="${#temporals.format(r.createdAt, 'dd.MM.yyyy HH:mm')}">дата</time>
+                    </div>
+                    <p style="margin:8px 0 0" th:text="${r.comment}">Комментарий…</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Навигация вниз -->
+        <div class="between">
+            <a href="/products" class="btn ghost">← В каталог</a>
+            <a href="#top" class="chip">Наверх ↑</a>
         </div>
     </div>
-
 </section>
+
+<!-- Footer -->
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
 </html>

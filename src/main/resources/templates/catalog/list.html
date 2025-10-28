@@ -1,22 +1,65 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout('Каталог', ~{::section})">
-<section>
-    <h1>Каталог кузницы</h1>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Каталог</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</head>
+<body>
+<div class="container">
+    <h1>Каталог</h1>
 
-    <div th:each="p : ${items}" class="card">
-        <div style="display:flex;align-items:center">
-            <img class="thumb" th:src="@{|/products/${p.productId}/image|}" alt="img"/>
-            <div>
-                <a th:href="@{|/products/${p.productId}|}" th:text="${p.name}">Название</a>
-                <div>
-                    <span th:text="${p.categoryName}">Категория</span> ·
-                    <b th:text="${#numbers.formatDecimal(p.priceFinal,1,'COMMA',2,'POINT')}">0.00</b>
-                    <span th:classappend="${p.stockQty <= 3} ? 'low-stock' : ''"
-                          th:text="'В наличии: ' + ${p.stockQty} + ' шт'">В наличии</span>
+    <!-- Пусто -->
+    <div th:if="${#lists.isEmpty(items)}" class="muted">Пока нет товаров.</div>
+
+    <!-- Список карточек -->
+    <div th:if="${!#lists.isEmpty(items)}"
+         class="grid"
+         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px">
+
+        <!-- всё, что использует 'item', находится внутри этого блока -->
+        <div class="card" th:each="item : ${items}"
+             style="border:1px solid #e5e7eb;border-radius:12px;background:#fff;overflow:hidden">
+
+            <a th:href="@{|/products/${item.productId}|}">
+                <img th:src="@{|/products/${item.productId}/image|}" alt=""
+                     style="width:100%;aspect-ratio:4/3;object-fit:cover;background:#f3f4f6">
+            </a>
+
+            <div style="padding:12px">
+                <a th:href="@{|/products/${item.productId}|}" th:text="${item.name}"
+                   style="display:block;font-weight:600;margin-bottom:6px">Название товара</a>
+
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'"
+                          style="font-weight:800"></span>
+                    <span th:if="${item.isPromotional}"
+                          th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'"
+                          style="color:#9ca3af;text-decoration:line-through"></span>
+                </div>
+
+                <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+                    <small>
+                        Остаток:
+                        <span th:text="${item.stockQty != null ? item.stockQty : 0}">0</span> шт
+                    </small>
+
+                    <form th:action="@{/cart/add}" method="post" style="margin:0">
+                        <input th:if="${_csrf != null}" type="hidden"
+                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <input type="hidden" name="productId" th:value="${item.productId}">
+                        <input type="hidden" name="qty" value="1">
+                        <button type="submit" class="btn"
+
+                                th:disabled="${item.stockQty == null or item.stockQty == 0}">🛒 В корзину</button>
+                    </form>
                 </div>
             </div>
         </div>
+        <!-- /th:each -->
     </div>
-</section>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
 </html>

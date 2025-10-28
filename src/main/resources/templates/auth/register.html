@@ -1,39 +1,89 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout('Регистрация', ~{::section})">
-<section>
-    <h1>Регистрация</h1>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Регистрация</title>
 
-    <div th:if="${error}" class="error" th:text="${error}"></div>
+    <!-- Локальные стили — такие же, как на логине -->
+    <style>
+        .auth-wrap {max-width: 420px; margin: 32px auto; padding: 0 16px;}
+        .card {background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px;}
+        .card h1 {margin:0 0 12px; font-size:22px;}
+        .field {margin:0 0 12px;}
+        .field label {display:block; font-size:14px; color:#374151; margin-bottom:6px;}
+        .field input {width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font:inherit;}
+        .actions {margin-top:10px; display:flex; gap:8px; align-items:center;}
+        .btn {display:inline-flex; align-items:center; justify-content:center; padding:10px 14px;
+            border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;}
+        .hint {font-size:12px; color:#6b7280;}
+        .error {margin:6px 0 0; color:#b91c1c; font-size:12px;}
+        .alert {margin:0 0 12px; padding:10px 12px; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#7f1d1d;}
+        .link {color:#111827; text-decoration:underline;}
+    </style>
+</head>
+<body>
 
-    <form th:action="@{/register}" method="post" th:object="${form}">
-        <label>Логин
-            <input type="text" th:field="*{login}" required>
-            <span th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></span>
-        </label><br/>
+<!-- header -->
+<th:block th:replace="~{fragments/header :: header}"></th:block>
 
-        <label>Email
-            <input type="email" th:field="*{email}" required>
-            <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-        </label><br/>
+<div class="auth-wrap">
+    <div class="card">
+        <h1>Регистрация</h1>
 
-        <label>Имя
-            <input type="text" th:field="*{name}">
-        </label><br/>
+        <!-- глобальные ошибки bean-validation (например, «Пароли не совпадают») -->
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert"
+             th:each="e : ${#fields.globalErrors()}" th:text="${e}">Ошибка</div>
 
-        <label>Пароль
-            <input type="password" th:field="*{password}" required>
-            <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
-        </label><br/>
+        <!-- сообщение из контроллера (на всякий случай) -->
+        <div th:if="${error}" class="alert" th:text="${error}">Ошибка</div>
 
-        <label>Повторите пароль
-            <input type="password" th:field="*{confirm}" required>
-            <span th:if="${#fields.hasErrors('confirm')}" th:errors="*{confirm}"></span>
-        </label><br/>
+        <form th:action="@{/register}" method="post" th:object="${form}">
+            <input th:if="${_csrf != null}" type="hidden"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-        <button type="submit">Создать аккаунт</button>
-    </form>
+            <div class="field">
+                <label for="login">Логин</label>
+                <input id="login" type="text" th:field="*{login}" required placeholder="например, blacksmith_ivan">
+                <div class="error" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
+            </div>
 
-    <p>Уже есть аккаунт? <a th:href="@{/login}">Войти</a></p>
-</section>
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" type="email" th:field="*{email}" required placeholder="you@example.com">
+                <div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
+
+            <div class="field">
+                <label for="name">Имя</label>
+                <input id="name" type="text" th:field="*{name}" placeholder="Иван">
+                <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                <div class="hint">Только буквы, пробелы и дефисы.</div>
+            </div>
+
+            <div class="field">
+                <label for="password">Пароль</label>
+                <input id="password" type="password" th:field="*{password}" required placeholder="минимум 6 символов">
+                <div class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            </div>
+
+            <div class="field">
+                <label for="confirm">Повторите пароль</label>
+                <input id="confirm" type="password" th:field="*{confirm}" required>
+                <div class="error" th:if="${#fields.hasErrors('confirm')}" th:errors="*{confirm}"></div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn">Создать аккаунт</button>
+                <span class="hint">Уже есть аккаунт?
+                    <a class="link" th:href="@{/login}">Войти</a>
+                </span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- footer -->
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
+</body>
 </html>

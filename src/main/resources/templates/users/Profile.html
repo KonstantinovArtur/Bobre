@@ -1,0 +1,103 @@
+<!-- src/main/resources/templates/users/profile.html -->
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Профиль</title>
+    <style>
+        .auth-wrap {max-width: 720px; margin: 32px auto; padding: 0 16px;}
+        .grid {display:grid; grid-template-columns: 1fr; gap:16px;}
+        .card {background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px;}
+        .card h2 {margin:0 0 12px; font-size:20px;}
+        .field {margin:0 0 12px;}
+        .field label {display:block; font-size:14px; color:#374151; margin-bottom:6px;}
+        .field input {width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font:inherit;}
+        .muted {color:#6b7280; font-size:12px;}
+        .btn {display:inline-flex; align-items:center; justify-content:center; padding:10px 14px;
+            border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;}
+        .error {margin:6px 0 0; color:#b91c1c; font-size:12px;}
+        .alert-ok {margin:0 0 12px; padding:10px 12px; border-radius:8px; border:1px solid #bbf7d0; background:#f0fdf4; color:#14532d;}
+        .alert-err {margin:0 0 12px; padding:10px 12px; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#7f1d1d;}
+    </style>
+</head>
+<body>
+
+<th:block th:replace="~{fragments/header :: header}"></th:block>
+
+<div class="auth-wrap">
+    <div th:if="${ok}" class="alert-ok" th:text="${ok}"></div>
+    <div th:if="${okPwd}" class="alert-ok" th:text="${okPwd}"></div>
+
+    <div class="grid">
+        <!-- Карточка профиля -->
+        <div class="card">
+            <h2>Профиль</h2>
+
+            <div class="muted" style="margin-bottom:8px">
+                Email: <b th:text="${email}">you@example.com</b> (неизменяемый)
+            </div>
+
+            <!-- локальные/глобальные ошибки формы профиля -->
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert-err"
+                 th:each="e : ${#fields.globalErrors()}" th:text="${e}">Ошибка</div>
+
+            <form th:action="@{/profile/update}" th:object="${profileForm}" method="post">
+                <input th:if="${_csrf != null}" type="hidden"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="field">
+                    <label for="login">Логин</label>
+                    <input id="login" type="text" th:field="*{login}" required>
+                    <div class="error" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="name">Имя</label>
+                    <input id="name" type="text" th:field="*{name}">
+                    <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    <div class="muted">Только буквы, пробелы и дефисы.</div>
+                </div>
+
+                <button type="submit" class="btn">Сохранить</button>
+            </form>
+        </div>
+
+        <!-- Карточка смены пароля -->
+        <div class="card">
+            <h2>Смена пароля</h2>
+
+            <form th:action="@{/profile/password}" th:object="${pwdForm}" method="post">
+                <input th:if="${_csrf != null}" type="hidden"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="field">
+                    <label for="cur">Текущий пароль</label>
+                    <input id="cur" type="password" th:field="*{currentPassword}" required>
+                    <div class="error" th:if="${#fields.hasErrors('currentPassword')}" th:errors="*{currentPassword}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="new">Новый пароль</label>
+                    <input id="new" type="password" th:field="*{newPassword}" required>
+                    <div class="error" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="cnf">Подтверждение</label>
+                    <input id="cnf" type="password" th:field="*{confirm}" required>
+                    <div class="error" th:if="${#fields.hasErrors('confirm')}" th:errors="*{confirm}"></div>
+                </div>
+
+                <button type="submit" class="btn">Изменить пароль</button>
+
+                <!-- общая ошибка (например, «текущий пароль неверен») -->
+                <div class="error" th:if="${#fields.hasErrors('*')}"
+                     th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>

@@ -1,3 +1,4 @@
+// AuthController.java
 package ru.forge.blacksmith_shop.users.web;
 
 import jakarta.validation.Valid;
@@ -30,17 +31,26 @@ public class AuthController {
 
     @PostMapping("/register")
     public String doRegister(@ModelAttribute("form") @Valid RegisterForm form,
-                             BindingResult br, Model model) {
+                             BindingResult br) {
         if (br.hasErrors()) {
             return "auth/register";
         }
         try {
             auth.register(form);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("error", ex.getMessage());
+            String msg = ex.getMessage() == null ? "Ошибка регистрации" : ex.getMessage();
+            // Маппим популярные тексты на конкретные поля (чтобы показать рядом с инпутом).
+            if (msg.contains("Логин")) {
+                br.rejectValue("login", "login.unique", msg);
+            } else if (msg.contains("Email") || msg.contains("почт")) {
+                br.rejectValue("email", "email.unique", msg);
+            } else if (msg.contains("Пароли")) {
+                br.rejectValue("confirm", "passwords.match", msg);
+            } else {
+                br.reject("registration.error", msg); // глобальная ошибка
+            }
             return "auth/register";
         }
-        // после регистрации можно логинить автоматически, но пока — просто на /login
         return "redirect:/login?registered";
     }
 }

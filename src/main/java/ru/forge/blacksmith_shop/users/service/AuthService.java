@@ -1,6 +1,7 @@
-// ru.forge.blacksmith_shop.users.service.AuthService
+// AuthService.java
 package ru.forge.blacksmith_shop.users.service;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +26,16 @@ public class AuthService {
 
     @Transactional
     public void register(RegisterForm form) {
-        users.findByLogin(form.getLogin()).ifPresent(u -> { throw new IllegalArgumentException("Логин уже занят"); });
-        users.findByEmail(form.getEmail()).ifPresent(u -> { throw new IllegalArgumentException("Email уже используется"); });
+        String login = form.getLogin().trim();
+        String email = form.getEmail().trim().toLowerCase();
+
+        if (users.existsByLogin(login)) {
+            throw new IllegalArgumentException("Логин уже занят");
+        }
+        if (users.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email уже используется");
+        }
+        // совпадение паролей уже проверяет bean-validation, но подстрахуемся:
         if (!form.getPassword().equals(form.getConfirm())) {
             throw new IllegalArgumentException("Пароли не совпадают");
         }
@@ -35,12 +44,17 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException("Роль 'User' не найдена в БД"));
 
         User u = new User();
-        u.setLogin(form.getLogin());
-        u.setEmail(form.getEmail());
-        u.setName(form.getName());
-        u.setPasswordHash(encoder.encode(form.getPassword())); // <-- BCrypt
+        u.setLogin(login);
+        u.setEmail(email);
+        u.setName(form.getName() == null ? null : form.getName().trim());
+        u.setPasswordHash(encoder.encode(form.getPassword()));
         u.setRole(role);
 
-        users.save(u);
+        try {
+            users.save(u);
+        } catch (DataIntegrityViolationException ex) {
+            // если вдруг впёрлись в уникальный индекс
+            throw new IllegalArgumentException("Пользователь с таким логином/почтой уже существует");
+        }
     }
 }

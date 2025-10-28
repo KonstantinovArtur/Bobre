@@ -6,6 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.*;
 import ru.forge.blacksmith_shop.users.domain.User;
 import ru.forge.blacksmith_shop.users.repo.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 
 import java.util.List;
 import java.util.Optional;

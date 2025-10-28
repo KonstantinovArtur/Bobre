@@ -1,0 +1,10 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="footer">
+</main> <!-- закрываем main, открытый в header -->
+<footer style="background:#222;color:#fff;">
+    <div class="container" style="max-width:1000px;margin:0 auto;padding:10px 20px">
+        © <span th:text="${T(java.time.Year).now()}">2025</span> Кузница
+    </div>
+</footer>
+</body>
+</html>

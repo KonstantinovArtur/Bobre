@@ -1,0 +1,78 @@
+<!-- src/main/resources/templates/cart/cart.html -->
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Корзина</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <style>
+        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:10px 0}
+        .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .muted{color:#6b7280}
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
+        .btn.ghost{background:#fff;color:#111827}
+        .total{font-weight:800;font-size:20px}
+    </style>
+</head>
+<body>
+<div class="container" style="max-width:900px;margin:20px auto">
+
+    <h1>Корзина</h1>
+
+    <!-- флеши -->
+    <div th:if="${ok}" class="card" th:text="${ok}"></div>
+    <div th:if="${error}" class="card" style="border-color:#ef4444;color:#b91c1c" th:text="${error}"></div>
+
+    <!-- ПУСТО -->
+    <div th:if="${cart.empty}" class="muted">Корзина пуста.</div>
+
+    <!-- ЕСТЬ ТОВАРЫ -->
+    <div th:if="${!cart.empty}">
+        <div class="card" th:each="i : ${cart.items}">
+            <div class="row">
+                <div>
+                    <div><b th:text="${i.name}">Название</b></div>
+                    <div class="muted">
+                        ID: <span th:text="${i.productId}">0</span> ·
+                        Цена: <span th:text="${#numbers.formatDecimal(i.priceFinal,1,'COMMA',2,'POINT')}">0,00</span> ₽ ·
+                        Кол-во: <b th:text="${i.qty}">1</b>
+                    </div>
+                </div>
+
+                <div class="row" style="gap:8px">
+                    <div><b th:text="${#numbers.formatDecimal(i.lineTotal,1,'COMMA',2,'POINT')}">0,00</b> ₽</div>
+                    <form th:action="@{/cart/remove}" method="post" style="margin:0">
+                        <input type="hidden" name="productId" th:value="${i.productId}"/>
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button class="btn ghost" type="submit">✖ Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+            <a class="btn ghost" th:href="@{/products}">← В каталог</a>
+
+            <div class="row" style="gap:8px">
+                <div class="total">
+                    Итого: <span th:text="${#numbers.formatDecimal(cart.total,1,'COMMA',2,'POINT')}">0,00</span> ₽
+                </div>
+
+                <form th:action="@{/cart/clear}" method="post" style="margin:0">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button class="btn ghost" type="submit">Очистить</button>
+                </form>
+
+                <form th:action="@{/cart/checkout}" method="post" style="margin:0">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button class="btn" type="submit">Оформить заказ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>
