@@ -1,0 +1,41 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Мои заказы</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <style>
+        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:10px 0}
+        .muted{color:#6b7280}
+    </style>
+</head>
+<body>
+<div class="container" style="max-width:900px;margin:20px auto">
+    <h1>Мои заказы</h1>
+
+    <div th:if="${#lists.isEmpty(orders)}" class="muted">Пока заказов нет.</div>
+
+    <div th:each="o : ${orders}" class="card">
+        <div style="display:flex;justify-content:space-between;gap:12px">
+            <div>
+                <div><b th:text="'Заказ №' + ${o.orderId}">Заказ</b></div>
+                <div class="muted"
+                     th:text="${#temporals.format(o.orderDate.atZoneSameInstant(T(java.time.ZoneId).of('Europe/Moscow')), 'dd.MM.yyyy HH:mm')}">
+                    дата
+                </div>
+                <div th:text="${o.addressLine}">Адрес</div>
+            </div>
+            <div style="text-align:right">
+                <div th:text="${o.statusTitle}">Статус</div>
+                <div class="muted">
+                    Товаров: <span th:text="${o.itemsCount}">0</span><br/>
+                    Доставка: <span th:text="${#numbers.formatDecimal(o.shippingCost,1,'COMMA',2,'POINT')}">0,00</span> ₽
+                </div>
+                <div style="font-weight:800;font-size:18px" th:text="${#numbers.formatDecimal(o.total,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>
