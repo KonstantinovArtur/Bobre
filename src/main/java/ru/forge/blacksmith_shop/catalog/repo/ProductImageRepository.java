@@ -26,6 +26,13 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Inte
         """, nativeQuery = true)
     Optional<ProductImage> findPrimaryByProductId(@Param("productId") Integer productId);
 
+    @Query(value = """
+        SELECT pi.* FROM product_images pi
+        WHERE pi.product_id = :productId
+        ORDER BY pi.is_primary DESC, pi.image_id ASC
+        """, nativeQuery = true)
+    List<ProductImage> findAllByProductIdOrder(@Param("productId") Integer productId);
+
     // Полезно для отладки/галереи, если пригодится
     @Query("select pi from ProductImage pi where pi.product.id = :productId order by pi.primary desc, pi.id asc")
     List<ProductImage> findAllByProductId(@Param("productId") Integer productId);

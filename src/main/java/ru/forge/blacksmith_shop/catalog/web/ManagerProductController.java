@@ -1,6 +1,9 @@
 // src/main/java/ru/forge/blacksmith_shop/catalog/web/ManagerProductController.java
 package ru.forge.blacksmith_shop.catalog.web;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import ru.forge.blacksmith_shop.catalog.domain.Category;
 import ru.forge.blacksmith_shop.catalog.domain.Product;
 import ru.forge.blacksmith_shop.catalog.domain.ProductImage;
@@ -37,17 +41,21 @@ public class ManagerProductController {
         this.images = images;
     }
 
-    // ---- LIST ----
+    // ---------- LIST ----------
     @GetMapping
-    public String list(Model model,
-                       @RequestParam(value = "ok", required = false) String ok) {
-        List<Product> all = products.findAll();
-        model.addAttribute("products", all);
+    public String list(Model model, @RequestParam(value = "ok", required = false) String ok) {
+        model.addAttribute("products", products.findAll());
         model.addAttribute("ok", ok);
         return "manager/products/list";
     }
 
-    // ---- CREATE FORM ----
+    @PostMapping("/delete/{id}")
+    @Transactional
+    public String deleteAlt(@PathVariable Integer id, RedirectAttributes ra) {
+        return delete(id, ra);
+    }
+
+    // ---------- CREATE FORM ----------
     @GetMapping("/new")
     public String createForm(Model model) {
         ProductForm form = new ProductForm();
@@ -57,26 +65,47 @@ public class ManagerProductController {
 
         model.addAttribute("form", form);
         model.addAttribute("categories", categories.findAll());
+        model.addAttribute("images", List.of());
+        model.addAttribute("isEdit", false);
         return "manager/products/form";
     }
 
-    // ---- CREATE ----
+    // ---------- CREATE ----------
     @PostMapping("/create")
     @Transactional
     public String create(@ModelAttribute ProductForm form,
-                         @RequestParam(name = "image", required = false) MultipartFile image,
-                         RedirectAttributes ra) {
+                         @RequestParam(value = "upload", required = false) MultipartFile upload,
+                         @RequestParam(value = "makePrimary", required = false, defaultValue = "false") boolean makePrimary,
+                         RedirectAttributes ra) throws IOException {
+
         Product p = new Product();
         apply(p, form);
         products.save(p);
 
-        savePrimaryImageIfPresent(p, image);
+        if (upload != null && !upload.isEmpty()) {
+            ProductImage pi = new ProductImage();
+            pi.setProduct(p);
+            pi.setFilename(safeFilename(upload.getOriginalFilename()));
+            pi.setMimeType(upload.getContentType() != null ? upload.getContentType() : "application/octet-stream");
+            pi.setBytes(upload.getBytes());
+            pi.setPrimary(makePrimary);
+            images.save(pi);
+
+            // если это первая картинка и флаг не проставили — делаем её главной
+            if (!makePrimary) {
+                var list = images.findAllByProductIdOrder(p.getId());
+                if (list.size() == 1) {
+                    list.get(0).setPrimary(true);
+                    images.save(list.get(0));
+                }
+            }
+        }
 
         ra.addAttribute("ok", "Товар создан");
         return "redirect:/manager/products";
     }
 
-    // ---- EDIT FORM ----
+    // ---------- EDIT FORM ----------
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Integer id, Model model, RedirectAttributes ra) {
         Optional<Product> opt = products.findById(id);
@@ -84,22 +113,19 @@ public class ManagerProductController {
             ra.addAttribute("ok", "Товар не найден");
             return "redirect:/manager/products";
         }
-        Product product = opt.get();
-        ProductForm form = toForm(product);
-
+        ProductForm form = toForm(opt.get());
         model.addAttribute("form", form);
         model.addAttribute("categories", categories.findAll());
-        // для предпросмотра текущей картинки
-        model.addAttribute("hasImage", images.findPrimaryByProductId(id).isPresent());
+        model.addAttribute("images", images.findAllByProductIdOrder(id));
+        model.addAttribute("isEdit", true);
         return "manager/products/form";
     }
 
-    // ---- UPDATE ----
+    // ---------- UPDATE ----------
     @PostMapping("/{id}/update")
     @Transactional
     public String update(@PathVariable Integer id,
                          @ModelAttribute ProductForm form,
-                         @RequestParam(name = "image", required = false) MultipartFile image,
                          RedirectAttributes ra) {
         Product p = products.findById(id).orElse(null);
         if (p == null) {
@@ -109,15 +135,11 @@ public class ManagerProductController {
         form.setId(id);
         apply(p, form);
         products.save(p);
-
-        // если прислали новый файл — сделаем его главным
-        savePrimaryImageIfPresent(p, image);
-
         ra.addAttribute("ok", "Изменения сохранены");
         return "redirect:/manager/products";
     }
 
-    // ---- DELETE ----
+    // ---------- DELETE ----------
     @PostMapping("/{id}/delete")
     @Transactional
     public String delete(@PathVariable Integer id, RedirectAttributes ra) {
@@ -130,7 +152,122 @@ public class ManagerProductController {
         return "redirect:/manager/products";
     }
 
-    // ---- helpers ----
+    // ---------- IMAGES: upload (для edit) ----------
+    @PostMapping("/{id}/images/add")
+    @Transactional
+    public String addImage(@PathVariable Integer id,
+                           @RequestParam("upload") MultipartFile upload,
+                           @RequestParam(value = "makePrimary", defaultValue = "false") boolean makePrimary,
+                           RedirectAttributes ra) throws IOException {
+        Product p = products.findById(id).orElse(null);
+        if (p == null) {
+            ra.addAttribute("ok", "Товар не найден");
+            return "redirect:/manager/products";
+        }
+        if (upload == null || upload.isEmpty()) {
+            ra.addAttribute("ok", "Файл не выбран");
+            return "redirect:/manager/products/" + id + "/edit";
+        }
+
+        ProductImage pi = new ProductImage();
+        pi.setProduct(p);
+        pi.setFilename(safeFilename(upload.getOriginalFilename()));
+        pi.setMimeType(upload.getContentType() != null ? upload.getContentType() : "application/octet-stream");
+        pi.setBytes(upload.getBytes());
+        pi.setPrimary(makePrimary);
+        images.save(pi);
+
+        if (makePrimary) {
+            // снять primary со старых
+            for (ProductImage other : images.findAllByProductIdOrder(id)) {
+                if (!other.getId().equals(pi.getId()) && other.isPrimary()) {
+                    other.setPrimary(false);
+                    images.save(other);
+                }
+            }
+        } else {
+            // если нет ни одной главной — сделать текущую главной
+            boolean hasPrimary = images.findAllByProductIdOrder(id).stream().anyMatch(ProductImage::isPrimary);
+            if (!hasPrimary) {
+                pi.setPrimary(true);
+                images.save(pi);
+            }
+        }
+
+        ra.addAttribute("ok", "Картинка добавлена");
+        return "redirect:/manager/products/" + id + "/edit";
+    }
+
+    // ---------- IMAGES: set primary ----------
+    @PostMapping("/{id}/images/{imageId}/primary")
+    @Transactional
+    public String makePrimary(@PathVariable Integer id,
+                              @PathVariable Integer imageId,
+                              RedirectAttributes ra) {
+        ProductImage pi = images.findById(imageId).orElse(null);
+        if (pi == null || pi.getProduct() == null || !id.equals(pi.getProduct().getId())) {
+            ra.addAttribute("ok", "Картинка не найдена");
+            return "redirect:/manager/products/" + id + "/edit";
+        }
+        // снять флаг со всех
+        for (ProductImage other : images.findAllByProductIdOrder(id)) {
+            if (other.isPrimary()) {
+                other.setPrimary(false);
+                images.save(other);
+            }
+        }
+        pi.setPrimary(true);
+        images.save(pi);
+
+        ra.addAttribute("ok", "Главная картинка обновлена");
+        return "redirect:/manager/products/" + id + "/edit";
+    }
+
+    // ---------- IMAGES: delete ----------
+    @PostMapping("/{id}/images/{imageId}/delete")
+    @Transactional
+    public String deleteImage(@PathVariable Integer id,
+                              @PathVariable Integer imageId,
+                              RedirectAttributes ra) {
+        ProductImage pi = images.findById(imageId).orElse(null);
+        if (pi == null || pi.getProduct() == null || !id.equals(pi.getProduct().getId())) {
+            ra.addAttribute("ok", "Картинка не найдена");
+            return "redirect:/manager/products/" + id + "/edit";
+        }
+        boolean wasPrimary = pi.isPrimary();
+        images.delete(pi);
+
+        if (wasPrimary) {
+            // если удалили главную — сделать первой по списку главной
+            var rest = images.findAllByProductIdOrder(id);
+            if (!rest.isEmpty() && rest.stream().noneMatch(ProductImage::isPrimary)) {
+                rest.get(0).setPrimary(true);
+                images.save(rest.get(0));
+            }
+        }
+
+        ra.addAttribute("ok", "Картинка удалена");
+        return "redirect:/manager/products/" + id + "/edit";
+    }
+
+    // ---------- IMAGES: preview (миниатюры по imageId) ----------
+    @GetMapping("/images/{imageId}/preview")
+    @ResponseBody
+    public ResponseEntity<byte[]> preview(@PathVariable Integer imageId) {
+        ProductImage pi = images.findById(imageId).orElse(null);
+        if (pi == null || pi.getBytes() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String mime = (pi.getMimeType() != null && pi.getMimeType().startsWith("image/"))
+                ? pi.getMimeType()
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, mime)
+                .body(pi.getBytes());
+    }
+
+    // ---------- helpers ----------
     private void apply(Product p, ProductForm f) {
         p.setName(nullToEmpty(f.getName()));
         p.setDescription(nullToEmpty(f.getDescription()));
@@ -160,25 +297,15 @@ public class ManagerProductController {
         return f;
     }
 
-    private void savePrimaryImageIfPresent(Product p, MultipartFile file) {
-        if (file == null || file.isEmpty()) return;
-
-        images.resetPrimary(p.getId());
-
-        ProductImage img = new ProductImage();
-        img.setProduct(p);
-        img.setPrimary(true);
-        img.setFilename(file.getOriginalFilename() != null ? file.getOriginalFilename() : "upload");
-        img.setMimeType(file.getContentType() != null ? file.getContentType() : "application/octet-stream");
-        try {
-            img.setBytes(file.getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException("Не удалось прочитать файл изображения", e);
-        }
-        images.save(img);
-    }
-
     private static String nullToEmpty(String s){ return s == null ? "" : s; }
     private static java.math.BigDecimal defaultBig(java.math.BigDecimal v, java.math.BigDecimal d){ return v == null ? d : v; }
     private static Integer defaultInt(Integer v, Integer d){ return v == null ? d : v; }
+
+    private static String safeFilename(String original) {
+        if (original == null) return "upload.bin";
+        String s = original.replace("\\", "/");
+        int idx = s.lastIndexOf('/');
+        if (idx >= 0) s = s.substring(idx + 1);
+        return s.replaceAll("[\\r\\n\\t]", "_");
+    }
 }

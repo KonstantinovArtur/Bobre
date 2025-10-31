@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Управление товарами</title>
+    <title>Адреса доставки</title>
 
     <th:block th:replace="~{fragments/header :: header}"></th:block>
 
@@ -34,8 +34,8 @@
 <body>
 <div class="container">
     <div class="top-bar">
-        <h1>Товары</h1>
-        <a class="btn primary" th:href="@{/manager/products/new}">➕ Добавить товар</a>
+        <h1>Адреса доставки</h1>
+        <a class="btn primary" th:href="@{/manager/addresses/new}">➕ Добавить адрес</a>
     </div>
 
     <!-- флеш -->
@@ -45,36 +45,30 @@
         <thead>
         <tr>
             <th>ID</th>
-            <th>Название</th>
-            <th>Категория (ID)</th>
-            <th>Цена</th>
-            <th>Скидка</th>
-            <th>Акция</th>
-            <th>Остаток</th>
+            <th>Адрес (address_line)</th>
+            <th>Стоимость доставки</th>
+            <th>Заказ (order_id)</th>
             <th>Действия</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="p : ${products}">
-            <td th:text="${p.id}">1</td>
-            <td th:text="${p.name}">Название</td>
+        <tr th:each="a : ${items}">
+            <td th:text="${a.id}">1</td>
+            <td th:text="${a.addressLine}">г. ...</td>
+            <td th:text="${a.shippingCost != null ? #numbers.formatDecimal(a.shippingCost,1,'COMMA',2,'POINT') + ' ₽' : '0,00 ₽'}">0,00 ₽</td>
 
-            <!-- важно: не трогаем p.category.name (LAZY). ID читает прокси без инициализации -->
-            <td th:text="${p.category != null} ? ${p.category.id} : '-'">-</td>
+            <!-- order_id в твоей таблице есть; просто показываем как справочную инфу -->
+            <td th:text="${a.orderId != null ? a.orderId : '—'}">—</td>
 
-            <td th:text="${p.price != null ? #numbers.formatDecimal(p.price,1,'COMMA',2,'POINT') + ' ₽' : '—'}">0.00 ₽</td>
-            <td th:text="${p.discountPercent != null ? (p.discountPercent + '%') : '—'}">0%</td>
-            <td th:text="${p.promotional} ? 'Да' : 'Нет'">Нет</td>
-            <td th:text="${p.stockQty}">0</td>
             <td>
                 <div class="actions">
-                    <a class="btn ghost" th:href="@{|/manager/products/${p.id}/edit|}">✏ Изменить</a>
+                    <a class="btn ghost" th:href="@{|/manager/addresses/${a.id}/edit|}">✏ Изменить</a>
 
-                    <form th:action="@{|/manager/products/${p.id}/delete|}" method="post" style="margin:0;display:inline">
+                    <form th:action="@{|/manager/addresses/${a.id}/delete|}" method="post" style="margin:0;display:inline">
                         <input th:if="${_csrf != null}" type="hidden"
                                th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button type="submit" class="btn danger"
-                                onclick="return confirm('Удалить товар?')">Удалить</button>
+                                onclick="return confirm('Удалить адрес?')">Удалить</button>
                     </form>
                 </div>
             </td>
@@ -82,8 +76,8 @@
         </tbody>
     </table>
 
-    <div th:if="${#lists.isEmpty(products)}" class="muted" style="margin-top:20px">
-        Пока нет товаров в каталоге.
+    <div th:if="${#lists.isEmpty(items)}" class="muted" style="margin-top:20px">
+        Пока нет адресов.
     </div>
 
     <div style="margin-top:20px">

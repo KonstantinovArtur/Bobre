@@ -51,6 +51,9 @@ public class ProductCatalogView {
     @Column(name = "primary_image_mime")
     private String primaryImageMime;
 
+    @Column(name = "category_id")        // ✅ добавляем category_id — нужно для фильтрации
+    private Integer categoryId;
+
     // --- геттеры (можно сгенерировать Lombok'ом)
     public Integer getProductId() { return productId; }
     public String getName() { return name; }
@@ -66,4 +69,6 @@ public class ProductCatalogView {
     public Integer getPrimaryImageId() { return primaryImageId; }
     public String getPrimaryImageFilename() { return primaryImageFilename; }
     public String getPrimaryImageMime() { return primaryImageMime; }
+    public Integer getCategoryId() { return categoryId; }   // ✅ важно для поиска/фильтра
+
 }

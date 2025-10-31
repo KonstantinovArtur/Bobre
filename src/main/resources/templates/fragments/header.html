@@ -29,8 +29,9 @@
   | <a th:href="@{/admin/users}">Админ: пользователи</a>
   | <a th:href="@{/admin/roles}">Админ: роли</a>
 </span>
-        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/products}">Товары (менеджер)</a>
-        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/categories}">Категории (менеджер)</a>
+        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/products}">Товары </a>
+        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/categories}">Категории </a>
+        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/addresses}">Адреса </a>
 
 
         <span class="user-info">

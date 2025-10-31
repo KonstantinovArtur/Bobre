@@ -3,94 +3,143 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title th:text="${form.id == null ? 'Новый товар' : 'Редактирование товара'}">Товар</title>
+    <title th:text="${isEdit} ? ('Редактирование товара #' + ${form.id}) : 'Новый товар'">Товар</title>
     <th:block th:replace="~{fragments/header :: header}"></th:block>
     <style>
-        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:16px 0}
+        .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+        @media (max-width: 960px){.grid{grid-template-columns:1fr}}
+        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px}
         label{display:block;margin:8px 0 4px}
         input,select,textarea{width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px}
-        .row{display:flex;gap:12px;align-items:flex-start}
+        .row{display:flex;gap:12px}
         .col{flex:1}
         .btn{padding:10px 14px;border-radius:8px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
         .btn.ghost{background:#fff;color:#111827}
         .muted{color:#6b7280}
-        .preview{width:100%;max-width:280px;aspect-ratio:4/3;border:1px dashed #e5e7eb;border-radius:10px;object-fit:contain;background:#f9fafb}
+        .thumb{width:100%;aspect-ratio:4/3;object-fit:contain;border:1px dashed #e5e7eb;border-radius:10px;background:#fafafa}
+        .chip{display:inline-block;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;background:#f9fafb;color:#374151}
+        .imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+        .imgcard{border:1px solid #e5e7eb;border-radius:10px;padding:8px;background:#fff;display:flex;flex-direction:column;gap:8px}
+        .imgcard img{width:100%;height:100px;object-fit:contain;background:#f8fafc;border-radius:6px}
+        .actions{display:flex;gap:6px;flex-wrap:wrap}
     </style>
 </head>
 <body>
-<div class="container" style="max-width:980px;margin:20px auto">
-    <h1 th:text="${form.id == null ? 'Новый товар' : 'Редактирование товара #'+form.id}">Товар</h1>
+<div class="container" style="max-width:1000px;margin:20px auto">
+    <h1 th:text="${isEdit} ? ('Редактирование товара #' + ${form.id}) : 'Новый товар'">Товар</h1>
 
-    <div class="card">
-        <form th:action="${form.id == null} ? @{/manager/products/create} : @{|/manager/products/${form.id}/update|}"
-              method="post" enctype="multipart/form-data">
-            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <div class="grid">
+        <!-- Левая колонка: форма полей -->
+        <div class="card">
+            <form th:action="${isEdit} ? @{|/manager/products/${form.id}/update|} : @{/manager/products/create}"
+                  method="post">
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-            <div class="row">
-                <div class="col">
-                    <label>Название</label>
-                    <input name="name" th:value="${form.name}" required/>
+                <label>Название</label>
+                <input name="name" th:value="${form.name}" required/>
 
-                    <label>Описание</label>
-                    <textarea name="description" rows="5" th:text="${form.description}"></textarea>
+                <label>Описание</label>
+                <textarea name="description" rows="5" th:text="${form.description}"></textarea>
 
-                    <div class="row">
-                        <div class="col">
-                            <label>Цена</label>
-                            <input type="number" step="0.01" min="0" name="price" th:value="${form.price}"/>
-                        </div>
-                        <div class="col">
-                            <label>Склад (шт)</label>
-                            <input type="number" min="0" name="stockQty" th:value="${form.stockQty}"/>
-                        </div>
+                <div class="row">
+                    <div class="col">
+                        <label>Цена</label>
+                        <input type="number" step="0.01" min="0" name="price" th:value="${form.price}"/>
                     </div>
-
-                    <div class="row">
-                        <div class="col">
-                            <label>Скидка (%)</label>
-                            <input type="number" step="0.01" min="0" max="100" name="discountPercent" th:value="${form.discountPercent}"/>
-                        </div>
-                        <div class="col">
-                            <label>Категория</label>
-                            <select name="categoryId" required>
-                                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
-                                        th:selected="${form.categoryId != null and form.categoryId == c.id}">Категория</option>
-                            </select>
-                        </div>
+                    <div class="col">
+                        <label>Склад (шт)</label>
+                        <input type="number" min="0" name="stockQty" th:value="${form.stockQty}"/>
                     </div>
-
-                    <label class="row" style="gap:8px;margin-top:8px">
-                        <input type="checkbox" name="promotional" th:checked="${form.promotional}"/>
-                        <span>Промо-товар</span>
-                    </label>
                 </div>
 
-                <!-- блок загрузки/превью изображения -->
-                <div class="col" style="max-width:320px">
-                    <label>Картинка (PNG/JPEG)</label>
-                    <input type="file" name="image" accept="image/*"/>
-
-                    <div class="muted" style="margin:6px 0 10px">
-                        Если выбрать файл — он станет «главной» картинкой товара.
+                <div class="row">
+                    <div class="col">
+                        <label>Скидка (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="discountPercent" th:value="${form.discountPercent}"/>
                     </div>
+                    <div class="col">
+                        <label>Категория</label>
+                        <select name="categoryId">
+                            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                    th:selected="${form.categoryId != null and form.categoryId == c.id}">
+                                Категория
+                            </option>
+                        </select>
+                    </div>
+                </div>
 
-                    <!-- предпросмотр текущей картинки товара -->
-                    <img class="preview"
-                         th:if="${form.id != null and hasImage}"
-                         th:src="@{|/products/${form.id}/image|}"
-                         alt="Текущая картинка"/>
+                <label class="row" style="align-items:center;gap:8px;margin-top:8px">
+                    <input type="checkbox" name="promotional" th:checked="${form.promotional}"/>
+                    <span>Промо-товар</span>
+                </label>
 
-                    <div class="muted" th:if="${form.id != null and !hasImage}">
-                        У товара пока нет изображения.
+                <div class="row" style="margin-top:16px">
+                    <button class="btn" type="submit">Сохранить</button>
+                    <a class="btn ghost" th:href="@{/manager/products}">Отмена</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Правая колонка: изображения -->
+        <div class="card">
+            <div class="row" style="justify-content:space-between;align-items:center;">
+                <h3 style="margin:0">Изображения</h3>
+                <span class="chip" th:if="${isEdit}" th:text="${#lists.size(images)} + ' шт'">0 шт</span>
+            </div>
+
+            <!-- Превью текущей «главной» для UX -->
+            <div th:if="${isEdit}" style="margin:10px 0">
+                <img class="thumb"
+                     th:src="@{|/products/${form.id}/image|}"
+                     alt="primary"/>
+                <div class="muted" style="margin-top:6px">Текущая «главная» (то, что видит клиент в каталоге).</div>
+            </div>
+
+            <!-- Загрузка новой картинки -->
+            <form th:if="${isEdit}" th:action="@{|/manager/products/${form.id}/images/add|}"
+                  method="post" enctype="multipart/form-data" style="margin-top:12px">
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <label>Добавить картинку</label>
+                <input type="file" name="upload" accept="image/*" required/>
+
+                <label class="row" style="align-items:center;gap:8px;margin-top:6px">
+                    <input type="checkbox" name="makePrimary"/>
+                    <span>Сделать главной</span>
+                </label>
+
+                <div class="row" style="margin-top:10px">
+                    <button class="btn" type="submit">Загрузить</button>
+                </div>
+            </form>
+
+            <!-- Изображения товара (списком с действиями) -->
+            <div th:if="${isEdit}" class="imgs" style="margin-top:14px">
+                <div class="imgcard" th:each="img : ${images}">
+                    <img th:src="@{|/manager/products/images/${img.id}/preview|}" alt="img"/>
+                    <div class="muted" th:text="${img.filename}">filename.png</div>
+                    <div class="actions">
+                        <form th:if="${!img.primary}" th:action="@{|/manager/products/${form.id}/images/${img.id}/primary|}" method="post">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button class="btn" type="submit">Сделать главной</button>
+                        </form>
+
+                        <span th:if="${img.primary}" class="chip">Главная</span>
+
+                        <form th:action="@{|/manager/products/${form.id}/images/${img.id}/delete|}" method="post"
+                              onsubmit="return confirm('Удалить изображение?');">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button class="btn ghost" type="submit">Удалить</button>
+                        </form>
                     </div>
                 </div>
             </div>
 
-            <div class="row" style="margin-top:16px">
-                <a class="btn ghost" th:href="@{/manager/products}">← Отмена</a>
-                <button class="btn" type="submit">Сохранить</button>
-            </div>
-        </form>
+            <!-- При создании: быстрая загрузка первой картинки -->
+            <form th:if="${!isEdit}" th:action="@{/manager/products/create}" method="post" enctype="multipart/form-data" style="margin-top:8px" onsubmit="return false;">
+                <div class="muted">Сначала сохраните товар, затем сможете добавить картинки.</div>
+            </form>
+        </div>
     </div>
 </div>
 
