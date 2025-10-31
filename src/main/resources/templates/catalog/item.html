@@ -3,149 +3,214 @@
 <head>
     <meta charset="UTF-8"/>
     <title th:text="${item.name} ?: 'Товар'">Товар</title>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;--card:#fff;--muted:#6b7280;--text:#0f172a;--line:#e5e7eb;
+            --primary:#111827;--accent:#2563eb;--chip-bg:#f1f5f9;--chip-bd:#e2e8f0;--chip-tx:#334155;
+            --ok:#065f46;--low:#b91c1c;--shadow:0 10px 20px rgba(2,6,23,.06),0 2px 6px rgba(2,6,23,.04);
+            --radius:16px;
+        }
+        *{box-sizing:border-box}
+        html,body{margin:0;padding:0}
+        body{
+            font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+            color:var(--text);
+            background:
+                    radial-gradient(1100px 520px at -10% -10%, #e8edff 0, rgba(232,237,255,0) 60%),
+                    radial-gradient(900px 500px at 110% -20%, #ffe8ef 0, rgba(255,232,239,0) 55%),
+                    var(--bg);
+        }
+        .container{max-width:1100px;margin:0 auto;padding:28px 20px 40px}
+        a{color:var(--accent);text-decoration:none}
+        a:hover{text-decoration:underline}
+
+        .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+        @media (max-width:1024px){.grid{grid-template-columns:1fr}}
+        .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+        .pad{padding:22px}
+        .mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+        .title{margin:0 0 6px;font-size:28px;line-height:1.2}
+        .muted{color:var(--muted)}
+        .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+        .between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+
+        .chips{display:flex;flex-wrap:wrap;gap:8px}
+        .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--chip-bd);background:var(--chip-bg);
+            color:var(--chip-tx);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600}
+        .badge{display:inline-flex;align-items:center;gap:6px;background:#fff7ed;color:#b45309;border:1px solid #fdba74;
+            border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}
+
+        .thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:#eef2ff;border:1px solid var(--line)}
+
+        .price-lg{font-size:32px;font-weight:800;letter-spacing:.2px}
+        .price-old{color:#94a3b8;text-decoration:line-through;margin-left:10px}
+        .stock{font-weight:700}.stock.low{color:var(--low)}.stock.ok{color:var(--ok)}
+
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border-radius:12px;
+            border:1px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;cursor:pointer;
+            transition:.2s transform,.2s box-shadow}
+        .btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(15,23,42,.18)}
+        .btn:disabled{opacity:.55;cursor:not-allowed}
+        .btn.ghost{background:#fff;color:var(--primary);border-color:var(--line)}
+        .btn.ghost:hover{box-shadow:var(--shadow)}
+        .input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
+        textarea{min-height:92px;resize:vertical}
+        .hr{height:1px;background:var(--line);margin:18px 0}
+        .revs{display:grid;gap:12px}
+        .rev{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff}
+        .avatar{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+            font-weight:800;background:#dbeafe;color:#1e3a8a;border:1px solid #bfdbfe}
+        .stars{white-space:nowrap}
+        /* липкая левая панель */
+        .sticky{position:sticky;top:18px}
+    </style>
 </head>
 
 <body>
 
-<!-- Header -->
 <div th:replace="fragments/header :: header"></div>
 
 <section>
-    <!-- локальные стили -->
-    <style>
-        .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
-        @media (max-width: 960px){.wrap{grid-template-columns:1fr}}
-        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}
-        .p16{padding:16px}.p20{padding:20px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb24{margin-bottom:24px}
-        .muted{color:#6b7280}.title{margin:0 0 4px;font-size:26px}
-        .row{display:flex;align-items:center;gap:10px}.between{display:flex;justify-content:space-between;align-items:center;gap:12px}
-        .thumb{width:100%;max-width:560px;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#f3f4f6}
-        .chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid #e5e7eb;border-radius:999px;padding:4px 10px;font-size:12px;background:#f9fafb;color:#374151}
-        .price-lg{font-size:28px;font-weight:800}
-        .price-old{color:#9ca3af;text-decoration:line-through;margin-left:8px}
-        .badge{display:inline-block;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:2px 8px;border-radius:999px;font-size:12px}
-        .stock{font-weight:600}.stock.low{color:#b91c1c}.stock.ok{color:#065f46}
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
-        .btn:disabled{opacity:.55;cursor:not-allowed}
-        .btn.ghost{background:#fff;color:#111827}
-        .kv{display:grid;grid-template-columns:160px 1fr;gap:6px 16px}
-        .hr{height:1px;background:#e5e7eb;margin:16px 0}
-        .rev{border-top:1px solid #eef2f7;padding-top:12px;margin-top:12px}
-        .stars{white-space:nowrap}
-        .container{max-width:1000px;margin:0 auto;padding:20px}
-        a.muted{color:#6b7280;text-decoration:none}
-        a.muted:hover{text-decoration:underline}
-    </style>
-
     <div class="container">
-        <a href="/products" class="muted">← назад</a>
+        <a href="/products" class="muted">← Назад в каталог</a>
 
-        <div class="wrap">
-            <!-- Левая колонка: фото + описание -->
-            <div class="card p20">
+        <div class="grid">
+
+            <!-- ЛЕВАЯ КОЛОНКА: покупка (стала первой и липкой) -->
+            <aside class="card pad sticky">
                 <h1 class="title" th:text="${item.name}">Товар</h1>
 
-                <div class="row mb12">
+                <div class="chips mb12">
                     <span class="chip" th:text="${item.categoryName}">Категория</span>
                     <span class="badge" th:if="${item.isPromotional}">Акция</span>
+                </div>
+
+                <div class="mb12">
+          <span class="price-lg"
+                th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
+                    <span class="price-old"
+                          th:if="${item.discountPercent != null and item.discountPercent > 0}"
+                          th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
+                </div>
+
+                <div class="mb16"
+                     th:with="qty=${item.stockQty != null ? item.stockQty : 0}"
+                     th:classappend="${qty <= 3} ? ' stock low' : ' stock ok'">
+                    <span class="muted">Остаток:</span>
+                    <span th:text="${qty} + ' шт'">0 шт</span>
+                </div>
+
+                <form th:action="@{/cart/add}" method="post" class="mb16">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="productId" th:value="${item.productId}"/>
+
+                    <label class="muted mb8" for="qty" style="display:block">Количество</label>
+                    <input id="qty" class="input mb12" type="number" name="qty" value="1" min="1"
+                           th:attr="max=${item.stockQty}"/>
+
+                    <button class="btn" th:disabled="${item.stockQty == null or item.stockQty == 0}">
+                        🛒 В корзину
+                    </button>
+                </form>
+
+                <div class="chips">
+                    <span class="chip">ID: <span th:text="${item.productId}">0</span></span>
                     <span class="chip" th:if="${item.avgRating != null}">
-              ★ <span th:text="${item.avgRating}">0</span> / 5
-            </span>
+            ★ <span th:text="${item.avgRating}">0</span> / 5
+          </span>
                     <span class="chip" th:if="${item.reviewsCount != null}"
                           th:text="${item.reviewsCount} + ' отзыв(ов)'">0 отзывов</span>
                 </div>
+            </aside>
 
-                <img class="thumb mb16" th:src="@{|/products/${item.productId}/image|}" alt="img"/>
+            <!-- ПРАВАЯ КОЛОНКА: фото и описание -->
+            <div class="card pad">
+                <img class="thumb mb20" th:src="@{|/products/${item.productId}/image|}" alt="image"/>
 
-                <div class="mb16">
+                <div class="mb20">
                     <div class="muted mb8">Описание</div>
-                    <p th:text="${item.description}">Описание товара…</p>
+                    <p style="margin:0" th:text="${item.description}">Описание товара…</p>
                 </div>
 
-                <!-- Характеристики (если переданы) -->
-                <div class="mb8" th:if="${specs != null}">
+                <!-- при необходимости — характеристики -->
+                <div th:if="${specs != null}">
                     <div class="muted mb8">Характеристики</div>
-                    <div class="kv">
+                    <div style="display:grid;grid-template-columns:180px 1fr;gap:8px 18px">
                         <div class="muted" th:each="s : ${specs}" th:text="${s.key}">Параметр</div>
                         <div th:each="s : ${specs}" th:text="${s.value}">Значение</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Правая колонка: цена/остаток/кнопка -->
-            <aside class="card p20">
-                <!-- Цена -->
-                <div class="mb12">
-            <span class="price-lg"
-                  th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
-                    <span class="price-old"
-                          th:if="${item.discountPercent != null and item.discountPercent > 0}"
-                          th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
-                </div>
-
-                <!-- Остаток -->
-                <div class="mb16"
-                     th:with="qty=${item.stockQty != null ? item.stockQty : 0}"
-                     th:classappend="${qty <= 3} ? ' stock low' : ' stock ok'">
-                    <span class="muted">Остаток на складе:</span>
-                    <span th:text="${qty} + ' шт'">0 шт</span>
-                </div>
-
-                <!-- Добавить в корзину -->
-                <form th:action="@{/cart/add}" method="post" class="mb8">
-                    <input th:if="${_csrf != null}" type="hidden"
-                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-                    <input type="hidden" name="productId" th:value="${item.productId}"/>
-                    <div class="between mb12">
-                        <label class="muted" for="qty">Количество</label>
-                        <input id="qty" type="number" name="qty" value="1" min="1"
-                               th:attr="max=${item.stockQty}"
-                               style="width:84px;padding:8px;border:1px solid #e5e7eb;border-radius:8px"/>
-                    </div>
-                    <button class="btn" th:disabled="${item.stockQty == null or item.stockQty == 0}">
-                        🛒 В корзину
-                    </button>
-                </form>
-
-
-                <div class="hr"></div>
-
-                <!-- Краткие метки -->
-                <div class="chips">
-                    <span class="chip">ID: <span th:text="${item.productId}">0</span></span>
-                    <span class="chip" th:if="${item.isPromotional}">Скидка <span th:text="${item.discountPercent}">0</span>%</span>
-                </div>
-            </aside>
         </div>
 
-        <!-- Отзывы -->
-        <div class="card p20 mb24" style="margin-top:20px">
+        <!-- ОТЗЫВЫ (форма теперь сверху, список ниже) -->
+        <div class="card pad mb24" style="margin-top:24px">
             <div class="between mb12">
-                <h2 style="margin:0">Отзывы</h2>
-                <a href="#reviews" class="chip" th:text="${(reviews == null) ? 0 : #lists.size(reviews)} + ' шт'">0 шт</a>
+                <h2 style="margin:0;font-size:22px">Отзывы</h2>
+                <a href="#reviews" class="chip"
+                   th:text="${(reviews == null) ? 0 : #lists.size(reviews)} + ' шт'">0 шт</a>
             </div>
 
-            <div th:if="${#lists.isEmpty(reviews)}" class="muted">Пока нет отзывов.</div>
+            <!-- Форма -->
+            <div class="mb20">
+                <form th:action="@{|/products/${item.productId}/reviews/save|}" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-            <div th:if="${!#lists.isEmpty(reviews)}" id="reviews">
+                    <div class="row" style="gap:16px;flex-wrap:wrap">
+                        <div style="min-width:160px;flex:0 0 200px">
+                            <label class="muted mb8" style="display:block">Оценка</label>
+                            <select name="rating" class="input" required>
+                                <option th:selected="${myReview != null and myReview.rating == 1}" value="1">★☆☆☆☆</option>
+                                <option th:selected="${myReview != null and myReview.rating == 2}" value="2">★★☆☆☆</option>
+                                <option th:selected="${myReview != null and myReview.rating == 3}" value="3">★★★☆☆</option>
+                                <option th:selected="${myReview != null and myReview.rating == 4}" value="4">★★★★☆</option>
+                                <option th:selected="${myReview != null and myReview.rating == 5}" value="5">★★★★★</option>
+                            </select>
+                        </div>
+
+                        <div style="flex:1 1 420px">
+                            <label class="muted mb8" style="display:block">Комментарий</label>
+                            <textarea class="input" name="comment" rows="3"
+                                      th:text="${myReview != null ? myReview.comment : ''}"
+                                      placeholder="Поделитесь впечатлениями…"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row" style="gap:8px;margin-top:12px">
+                        <button type="submit" class="btn">💬 Сохранить отзыв</button>
+                        <button th:if="${myReview != null}"
+                                th:formaction="@{|/products/${item.productId}/reviews/delete|}"
+                                formmethod="post"
+                                class="btn ghost">🗑 Удалить</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="hr"></div>
+
+            <!-- Список -->
+            <div class="revs" id="reviews">
                 <div class="rev" th:each="r : ${reviews}">
                     <div class="between">
                         <div class="row">
-                            <strong th:text="${r.userLogin}">user</strong>
-                            <span class="stars">
-                  <span th:utext="${#strings.repeat('★', (r.rating == null ? 0 : r.rating.intValue()))}"></span>
-                  <span class="muted" th:utext="${#strings.repeat('☆', 5 - (r.rating == null ? 0 : r.rating.intValue()))}"></span>
-                </span>
+                            <div class="avatar" th:text="${#strings.substring(r.userName,0,1)}">U</div>
+                            <strong th:text="${r.userName}">User</strong>
+                            <span class="stars" style="margin-left:6px">
+                <span th:utext="${#strings.repeat('★', (r.rating == null ? 0 : r.rating.intValue()))}"></span>
+                <span class="muted"
+                      th:utext="${#strings.repeat('☆', 5 - (r.rating == null ? 0 : r.rating.intValue()))}"></span>
+              </span>
                         </div>
-                        <time class="muted" th:text="${#temporals.format(r.createdAt, 'dd.MM.yyyy HH:mm')}">дата</time>
+                        <time class="muted"
+                              th:text="${#temporals.format(r.createdAt.plusHours(3), 'dd.MM.yyyy HH:mm')}">дата</time>
                     </div>
-                    <p style="margin:8px 0 0" th:text="${r.comment}">Комментарий…</p>
+                    <p style="margin:10px 0 0" th:text="${r.comment}">Комментарий…</p>
                 </div>
             </div>
         </div>
 
-        <!-- Навигация вниз -->
         <div class="between">
             <a href="/products" class="btn ghost">← В каталог</a>
             <a href="#top" class="chip">Наверх ↑</a>
@@ -153,7 +218,6 @@
     </div>
 </section>
 
-<!-- Footer -->
 <div th:replace="fragments/footer :: footer"></div>
 
 </body>

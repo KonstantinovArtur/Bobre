@@ -13,6 +13,8 @@
         .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
         .btn.ghost{background:#fff;color:#111827}
         .total{font-weight:800;font-size:20px}
+        select,input[type="text"],input[type="number"]{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+        .col{display:flex;flex-direction:column;gap:8px}
     </style>
 </head>
 <body>
@@ -54,7 +56,7 @@
         <div class="row" style="margin-top:12px">
             <a class="btn ghost" th:href="@{/products}">← В каталог</a>
 
-            <div class="row" style="gap:8px">
+            <div class="row" style="gap:8px; align-items:flex-start">
                 <div class="total">
                     Итого: <span th:text="${#numbers.formatDecimal(cart.total,1,'COMMA',2,'POINT')}">0,00</span> ₽
                 </div>
@@ -64,9 +66,30 @@
                     <button class="btn ghost" type="submit">Очистить</button>
                 </form>
 
-                <form th:action="@{/cart/checkout}" method="post" style="margin:0">
+                <!-- ✅ Оформление: адрес + доставка + submit -->
+                <form th:action="@{/cart/checkout}" method="post" class="card" style="margin:0">
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                    <button class="btn" type="submit">Оформить заказ</button>
+
+                    <div class="col" style="min-width:320px">
+                        <label class="muted">Адрес доставки</label>
+
+                        <!-- Если есть сохранённые адреса — показываем select -->
+                        <div th:if="${addresses != null and !#lists.isEmpty(addresses)}">
+                            <select name="address" required style="width:100%">
+                                <option value="" disabled selected>Выберите адрес</option>
+                                <option th:each="a : ${addresses}" th:value="${a}" th:text="${a}"></option>
+                            </select>
+                        </div>
+
+                        <!-- Если адресов нет — даём поле ввода -->
+                        <div th:if="${addresses == null or #lists.isEmpty(addresses)}">
+                            <input type="text" name="address" required placeholder="Введите адрес доставки" style="width:100%"/>
+                        </div>
+
+
+
+                        <button class="btn" type="submit">Оформить заказ</button>
+                    </div>
                 </form>
             </div>
         </div>

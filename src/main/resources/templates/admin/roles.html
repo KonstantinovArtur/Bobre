@@ -1,0 +1,63 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Роли</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <style>
+        .wrap{max-width:900px;margin:20px auto}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:10px 0}
+        .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .muted{color:#6b7280}
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
+        .btn.ghost{background:#fff;color:#111827}
+        input[type="text"]{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <h1>Роли</h1>
+
+    <div th:if="${ok}" class="card" th:text="${ok}"></div>
+
+    <!-- Создание роли -->
+    <div class="card">
+        <h3 style="margin:0 0 8px">Новая роль</h3>
+        <form th:action="@{/admin/roles/create}" method="post" class="row" style="justify-content:flex-start;gap:8px">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <!-- ВАЖНО: name="name" -->
+            <input type="text" name="name" placeholder="Название роли" required/>
+            <button class="btn" type="submit">Добавить</button>
+        </form>
+    </div>
+
+    <!-- Список ролей -->
+    <div class="card">
+        <div class="muted" style="margin-bottom:8px">Всего: <span th:text="${#lists.size(roles)}">0</span></div>
+
+        <div th:each="r : ${roles}" class="row" style="padding:6px 0;border-top:1px solid #f3f4f6" th:classappend="${rStat.index == 0}? ' first'">
+            <!-- Редактирование названия роли -->
+            <form th:action="@{|/admin/roles/${r.roleId}/rename|}" method="post" class="row" style="gap:8px;margin:0">
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <!-- ВАЖНО: name="name" -->
+                <input type="text" name="name" th:value="${r.roleName}" required/>
+                <button class="btn" type="submit">Сохранить</button>
+            </form>
+
+            <!-- Удаление роли -->
+            <form th:action="@{|/admin/roles/${r.roleId}/delete|}" method="post" style="margin:0">
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button class="btn ghost" type="submit" onclick="return confirm('Удалить роль?')">Удалить</button>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <a class="btn ghost" th:href="@{/}">← На главную</a>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>

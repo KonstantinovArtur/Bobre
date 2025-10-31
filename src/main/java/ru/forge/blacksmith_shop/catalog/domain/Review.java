@@ -8,22 +8,37 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "reviews")
 public class Review {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer reviewId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private ru.forge.blacksmith_shop.catalog.domain.Product product;
 
     private Integer rating;
+
+    @Column(length = 2000)
     private String comment;
 
-    @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
-    // геттеры/сеттеры
+    public Integer getReviewId() { return reviewId; }
+    public ru.forge.blacksmith_shop.users.domain.User getUser() { return user; }
+    public ru.forge.blacksmith_shop.catalog.domain.Product getProduct() { return product; }
+    public Integer getRating() { return rating; }
+    public String getComment() { return comment; }
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+
+    public void setUser(ru.forge.blacksmith_shop.users.domain.User user) { this.user = user; }
+    public void setProduct(ru.forge.blacksmith_shop.catalog.domain.Product product) { this.product = product; }
+    public void setRating(Integer rating) { this.rating = rating; }
+    public void setComment(String comment) { this.comment = comment; }
+    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }

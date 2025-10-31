@@ -25,6 +25,14 @@
         <a th:href="@{/cart}">Корзина</a>
         <a th:href="@{/orders}">Заказы</a>
 
+        <span sec:authorize="hasRole('Admin') or hasAuthority('Admin')">
+  | <a th:href="@{/admin/users}">Админ: пользователи</a>
+  | <a th:href="@{/admin/roles}">Админ: роли</a>
+</span>
+        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/products}">Товары (менеджер)</a>
+        <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/categories}">Категории (менеджер)</a>
+
+
         <span class="user-info">
       <span sec:authorize="!isAuthenticated()">
         <a th:href="@{/login}">Войти</a> |

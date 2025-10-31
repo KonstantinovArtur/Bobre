@@ -1,0 +1,99 @@
+<!-- src/main/resources/templates/manager/products/form.html -->
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${form.id == null ? 'Новый товар' : 'Редактирование товара'}">Товар</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <style>
+        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:16px 0}
+        label{display:block;margin:8px 0 4px}
+        input,select,textarea{width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+        .row{display:flex;gap:12px;align-items:flex-start}
+        .col{flex:1}
+        .btn{padding:10px 14px;border-radius:8px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
+        .btn.ghost{background:#fff;color:#111827}
+        .muted{color:#6b7280}
+        .preview{width:100%;max-width:280px;aspect-ratio:4/3;border:1px dashed #e5e7eb;border-radius:10px;object-fit:contain;background:#f9fafb}
+    </style>
+</head>
+<body>
+<div class="container" style="max-width:980px;margin:20px auto">
+    <h1 th:text="${form.id == null ? 'Новый товар' : 'Редактирование товара #'+form.id}">Товар</h1>
+
+    <div class="card">
+        <form th:action="${form.id == null} ? @{/manager/products/create} : @{|/manager/products/${form.id}/update|}"
+              method="post" enctype="multipart/form-data">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="row">
+                <div class="col">
+                    <label>Название</label>
+                    <input name="name" th:value="${form.name}" required/>
+
+                    <label>Описание</label>
+                    <textarea name="description" rows="5" th:text="${form.description}"></textarea>
+
+                    <div class="row">
+                        <div class="col">
+                            <label>Цена</label>
+                            <input type="number" step="0.01" min="0" name="price" th:value="${form.price}"/>
+                        </div>
+                        <div class="col">
+                            <label>Склад (шт)</label>
+                            <input type="number" min="0" name="stockQty" th:value="${form.stockQty}"/>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label>Скидка (%)</label>
+                            <input type="number" step="0.01" min="0" max="100" name="discountPercent" th:value="${form.discountPercent}"/>
+                        </div>
+                        <div class="col">
+                            <label>Категория</label>
+                            <select name="categoryId" required>
+                                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                        th:selected="${form.categoryId != null and form.categoryId == c.id}">Категория</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="row" style="gap:8px;margin-top:8px">
+                        <input type="checkbox" name="promotional" th:checked="${form.promotional}"/>
+                        <span>Промо-товар</span>
+                    </label>
+                </div>
+
+                <!-- блок загрузки/превью изображения -->
+                <div class="col" style="max-width:320px">
+                    <label>Картинка (PNG/JPEG)</label>
+                    <input type="file" name="image" accept="image/*"/>
+
+                    <div class="muted" style="margin:6px 0 10px">
+                        Если выбрать файл — он станет «главной» картинкой товара.
+                    </div>
+
+                    <!-- предпросмотр текущей картинки товара -->
+                    <img class="preview"
+                         th:if="${form.id != null and hasImage}"
+                         th:src="@{|/products/${form.id}/image|}"
+                         alt="Текущая картинка"/>
+
+                    <div class="muted" th:if="${form.id != null and !hasImage}">
+                        У товара пока нет изображения.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:16px">
+                <a class="btn ghost" th:href="@{/manager/products}">← Отмена</a>
+                <button class="btn" type="submit">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>

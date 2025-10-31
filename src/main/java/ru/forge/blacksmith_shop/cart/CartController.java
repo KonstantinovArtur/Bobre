@@ -7,9 +7,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.forge.blacksmith_shop.catalog.repo.ProductRepository;
+import ru.forge.blacksmith_shop.order.AddressRepository;
 import ru.forge.blacksmith_shop.users.repo.UserRepository;
 import ru.forge.blacksmith_shop.order.OrderService;
+
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 @Controller
 @RequestMapping("/cart")
@@ -20,7 +24,8 @@ public class CartController {
     private final UserRepository users;
     private final CartStorageService storage;
     private final CartService cartService;    // резерв/освобождение склада
-    private final OrderService orderService;  // <-- добавили
+    private final OrderService orderService;  // создание заказа
+    private final AddressRepository addressRepo; // ✅ добавили
 
     // Явный конструктор без Lombok
     public CartController(Cart cart,
@@ -28,20 +33,28 @@ public class CartController {
                           UserRepository users,
                           CartStorageService storage,
                           CartService cartService,
-                          OrderService orderService) {
+                          OrderService orderService,
+                          AddressRepository addressRepo) {
         this.cart = cart;
         this.products = products;
         this.users = users;
         this.storage = storage;
         this.cartService = cartService;
-        this.orderService = orderService; // <-- важно
+        this.orderService = orderService;
+        this.addressRepo = addressRepo;
     }
 
+
+
+    // src/main/java/ru/forge/blacksmith_shop/cart/CartController.java
     @GetMapping
     public String view(Model model) {
         model.addAttribute("cart", cart);
+        // общий список адресов для всех
+        model.addAttribute("addresses", addressRepo.findAllDistinct());
         return "cart/cart";
     }
+
 
     @PostMapping("/add")
     public String add(@RequestParam Integer productId,
@@ -101,10 +114,17 @@ public class CartController {
             return "redirect:/cart";
         }
 
+        // Адрес обязателен: либо выбран из списка, либо введён вручную (если списка нет)
+        String finalAddress = (address == null || address.isBlank()) ? null : address.trim();
+        if (finalAddress == null) {
+            ra.addFlashAttribute("error", "Укажите адрес доставки");
+            return "redirect:/cart";
+        }
+
         var created = orderService.checkout(
                 cart,
                 userOpt.get().getUserId(),
-                (address == null || address.isBlank()) ? "Самовывоз" : address,
+                finalAddress,
                 (shipping == null) ? BigDecimal.ZERO : shipping
         );
 

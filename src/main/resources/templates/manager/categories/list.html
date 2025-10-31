@@ -1,0 +1,65 @@
+<!-- src/main/resources/templates/manager/categories/list.html -->
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Категории — менеджер</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <style>
+        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:16px 0}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+        .row{display:flex;gap:8px;align-items:center}
+        .btn{padding:8px 12px;border-radius:8px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
+        .btn.ghost{background:#fff;color:#111827}
+        input{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+    </style>
+</head>
+<body>
+<div class="container" style="max-width:800px;margin:20px auto">
+    <h1>Категории</h1>
+
+    <div th:if="${ok}" class="card" th:text="${ok}"></div>
+
+    <div class="card">
+        <h3>Добавить категорию</h3>
+        <form th:action="@{/manager/categories/create}" method="post" class="row" style="margin-top:8px">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input name="name" placeholder="Название" required/>
+            <button class="btn" type="submit">Добавить</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Список</h3>
+        <table>
+            <thead>
+            <tr><th>ID</th><th>Название</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${items}">
+                <td th:text="${c.id}">1</td>
+                <td>
+                    <form th:action="@{|/manager/categories/${c.id}/update|}" method="post" class="row">
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <input name="name" th:value="${c.name}" required style="min-width:260px"/>
+                        <button class="btn" type="submit">Сохранить</button>
+                    </form>
+                </td>
+                <td>
+                    <form th:action="@{|/manager/categories/${c.id}/delete|}" method="post" style="margin:0"
+                          onsubmit="return confirm('Удалить категорию?')">
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button class="btn ghost" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <a class="btn ghost" th:href="@{/}">← На главную</a>
+</div>
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>

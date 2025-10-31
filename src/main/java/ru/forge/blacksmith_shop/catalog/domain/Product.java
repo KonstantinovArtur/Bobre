@@ -1,18 +1,11 @@
 package ru.forge.blacksmith_shop.catalog.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 @Entity
 @Table(name = "products")
-@Getter
-@Setter
-@NoArgsConstructor
 public class Product {
 
     @Id
@@ -42,17 +35,41 @@ public class Product {
     @Column(name = "is_promotional", nullable = false)
     private boolean promotional;
 
-    /** совместимость с шаблонами и CartService — возвращает ID товара */
-    public Integer getProductId() {
-        return id;
+    public Product() {
     }
 
-    /** ручной геттер для имени — обход проблем Lombok при компиляции */
-    public String getName() {
-        return this.name;
-    }
+    // --------- getters/setters ----------
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    // alias used in some places
+    public Integer getProductId() { return id; }
+    public void setProductId(Integer id) { this.id = id; }
 
-    /** финальная цена с учётом скидки (если скидки нет — возвращает price) */
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+
+    public Integer getStockQty() { return stockQty; }
+    public void setStockQty(Integer stockQty) { this.stockQty = stockQty; }
+
+    public BigDecimal getDiscountPercent() { return discountPercent; }
+    public void setDiscountPercent(BigDecimal discountPercent) { this.discountPercent = discountPercent; }
+
+    // boolean with both is/get for full compatibility
+    public boolean isPromotional() { return promotional; }
+    public boolean getPromotional() { return promotional; } // некоторые контроллеры вызывают get*
+    public void setPromotional(boolean promotional) { this.promotional = promotional; }
+
+    // --------- helpers (как было) ----------
+    /** Финальная цена с учётом скидки */
     public BigDecimal getPriceFinal() {
         if (price == null) return BigDecimal.ZERO;
         if (discountPercent == null || discountPercent.compareTo(BigDecimal.ZERO) <= 0) {
@@ -64,31 +81,19 @@ public class Product {
         return price.subtract(discount).setScale(2, RoundingMode.HALF_UP);
     }
 
+    /** Удобный доступ к названию категории (бережно к LAZY-прокси) */
     public String getCategoryName() {
         if (category == null) return null;
-
-        // Если в Category есть getName()
-        try {
-            return (String) category.getClass().getMethod("getName").invoke(category);
-        } catch (Exception ignored) {}
-
-        // Если в Category есть getCategoryName()
-        try {
-            return (String) category.getClass().getMethod("getCategoryName").invoke(category);
-        } catch (Exception ignored) {}
-
-        // Ни один геттер не найден
-        return null;
+        try { return category.getName(); } catch (Exception ignored) {}
+        // бэкап через reflection (если меняли модель)
+        try { return (String) category.getClass().getMethod("getName").invoke(category); }
+        catch (Exception ignored) { return null; }
     }
 
-
-    /** если нужно получить скидку как int (удобно для отображения) */
+    /** Скидка как целое число (для UI) */
     public Integer getDiscountPercentInt() {
-        return discountPercent != null ? discountPercent.setScale(0, RoundingMode.DOWN).intValue() : 0;
-    }
-
-    /** совместимость с выражениями item.isPromotional в шаблонах */
-    public boolean isPromotional() {
-        return promotional;
+        return discountPercent != null
+                ? discountPercent.setScale(0, RoundingMode.DOWN).intValue()
+                : 0;
     }
 }
