@@ -32,6 +32,7 @@
         <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/products}">Товары </a>
         <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/categories}">Категории </a>
         <a sec:authorize="hasAnyRole('Admin','Manager')" th:href="@{/manager/addresses}">Адреса </a>
+        <a sec:authorize="hasAnyRole('Manager')" th:href="@{/manager/orders}">Заказы </a>
 
 
         <span class="user-info">

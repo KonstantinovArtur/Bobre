@@ -1,5 +1,5 @@
 // src/main/java/ru/forge/blacksmith_shop/order/web/ManagerAddressController.java
-package ru.forge.blacksmith_shop.order.web;
+package ru.forge.blacksmith_shop.order;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
