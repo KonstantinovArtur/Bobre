@@ -1,10 +1,12 @@
 // src/main/java/ru/forge/blacksmith_shop/order/web/ManagerAddressController.java
-package ru.forge.blacksmith_shop.order;
+package ru.forge.blacksmith_shop.order; // <- поправил пакет на .../web/ для единообразия
 
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.forge.blacksmith_shop.order.domain.OrderAddress;
 import ru.forge.blacksmith_shop.order.repo.OrderAddressRepository;
@@ -36,13 +38,21 @@ public class ManagerAddressController {
         OrderAddress a = new OrderAddress();
         a.setShippingCost(BigDecimal.ZERO);
         model.addAttribute("form", a);
+        model.addAttribute("isEdit", false);
         return "manager/addresses/form";
     }
 
     // CREATE
     @PostMapping("/create")
     @Transactional
-    public String create(@ModelAttribute("form") OrderAddress form, RedirectAttributes ra) {
+    public String create(@Valid @ModelAttribute("form") OrderAddress form,
+                         BindingResult br,
+                         Model model,
+                         RedirectAttributes ra) {
+        if (br.hasErrors()) {
+            model.addAttribute("isEdit", false);
+            return "manager/addresses/form";
+        }
         normalize(form);
         orderAddressRepository.save(form);
         ra.addAttribute("ok", "Адрес добавлен");
@@ -58,6 +68,7 @@ public class ManagerAddressController {
             return "redirect:/manager/addresses";
         }
         model.addAttribute("form", opt.get());
+        model.addAttribute("isEdit", true);
         return "manager/addresses/form";
     }
 
@@ -65,17 +76,30 @@ public class ManagerAddressController {
     @PostMapping("/{id}/update")
     @Transactional
     public String update(@PathVariable Integer id,
-                         @ModelAttribute("form") OrderAddress form,
+                         @Valid @ModelAttribute("form") OrderAddress form,
+                         BindingResult br,
+                         Model model,
                          RedirectAttributes ra) {
+        // Сохраняем id в форме, чтобы th:action и заголовок работали при ошибках
+        form.setId(id);
+
+        if (br.hasErrors()) {
+            model.addAttribute("isEdit", true);
+            return "manager/addresses/form";
+        }
+
         OrderAddress existing = orderAddressRepository.findById(id).orElse(null);
         if (existing == null) {
             ra.addAttribute("ok", "Адрес не найден");
             return "redirect:/manager/addresses";
         }
+
+        // Только после успешной валидации переносим данные
         existing.setAddressLine(nz(form.getAddressLine()));
         existing.setShippingCost(form.getShippingCost() == null ? BigDecimal.ZERO : form.getShippingCost());
         // orderId менеджерскому справочнику не нужен — не трогаем
         orderAddressRepository.save(existing);
+
         ra.addAttribute("ok", "Изменения сохранены");
         return "redirect:/manager/addresses";
     }

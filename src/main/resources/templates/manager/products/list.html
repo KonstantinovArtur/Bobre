@@ -39,7 +39,10 @@
     </div>
 
     <!-- флеш -->
-    <div th:if="${ok}" class="flash" th:text="${ok}"></div>
+    <div th:if="${ok}" class="flash" style="border-color:#86efac;background:#dcfce7;color:#166534;"
+         th:text="${ok}"></div>
+    <div th:if="${error}" class="flash" style="border-color:#fecaca;background:#fee2e2;color:#991b1b;"
+         th:text="${error}"></div>
 
     <table>
         <thead>

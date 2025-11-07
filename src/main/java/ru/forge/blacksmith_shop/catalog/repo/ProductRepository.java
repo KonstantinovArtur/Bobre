@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
+    long countByCategoryId(Integer categoryId);
+
     // Поиск + фильтр по категории (без fetch, в шаблоне используем p.categoryName)
     @Query("""
            select p

@@ -1,6 +1,10 @@
 package ru.forge.blacksmith_shop.users.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 import java.util.Objects;
 
 @Entity
@@ -12,6 +16,10 @@ public class Role {
     @Column(name = "role_id")
     private Integer roleId;
 
+    @NotBlank(message = "Название роли не может быть пустым")
+    @Size(min = 3, max = 20, message = "Название роли должно быть от 3 до 20 символов")
+    @Pattern(regexp = "^[A-Za-zА-Яа-я][A-Za-zА-Яа-я0-9_-]*$",
+            message = "Роль должна начинаться с буквы и содержать только буквы, цифры, дефис или подчёркивание")
     @Column(name = "role_name", nullable = false, unique = true, length = 50)
     private String roleName;
 

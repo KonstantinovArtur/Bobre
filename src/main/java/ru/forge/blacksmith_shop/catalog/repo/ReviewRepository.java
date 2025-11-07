@@ -21,4 +21,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     // удалить отзыв
     void deleteByUser_UserIdAndProduct_Id(Integer userId, Integer productId);
+    // плюс к тому, что уже есть
+    long countByProduct_Id(Integer productId);
+
 }

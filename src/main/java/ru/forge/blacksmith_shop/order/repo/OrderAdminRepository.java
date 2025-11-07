@@ -103,4 +103,11 @@ public class OrderAdminRepository {
             """;
         return jdbc.update(sql, orderId);
     }
+    public long countByUserId(Integer userId) {
+        Long n = jdbc.queryForObject(
+                "select count(*) from orders where user_id = ?",
+                Long.class, userId
+        );
+        return n != null ? n : 0L;
+    }
 }

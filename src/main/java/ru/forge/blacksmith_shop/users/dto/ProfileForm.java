@@ -10,8 +10,11 @@ public class ProfileForm {
     @Pattern(regexp = "^[A-Za-z][A-Za-z0-9_.-]*$", message = "Логин должен начинаться с буквы и содержать только буквы, цифры, _ . -")
     private String login;
 
-    @Size(max = 150)
-    @Pattern(regexp = "^[\\p{L} \\-]+$", message = "Имя может содержать только буквы, пробелы и дефисы")
+    @Size(min = 3, max = 150, message = "Имя должно содержать минимум 3 символа")
+    @Pattern(
+            regexp = "^(?=\\p{L})[\\p{L}\\p{M}\\-\\s]{3,150}$",
+            message = "Имя должно начинаться с буквы и содержать только буквы, пробелы и дефисы"
+    )
     private String name;
 
     public ProfileForm() {}

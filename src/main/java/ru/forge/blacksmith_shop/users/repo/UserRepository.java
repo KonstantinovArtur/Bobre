@@ -2,6 +2,7 @@
 package ru.forge.blacksmith_shop.users.repo;
 
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import ru.forge.blacksmith_shop.users.domain.User;
 import ru.forge.blacksmith_shop.users.dto.UserRow;
 
@@ -17,9 +18,15 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByLogin(String login);
     boolean existsByEmail(String email);
 
+    @Query("select (count(u) > 0) from User u where lower(u.login) = lower(:login)")
+    boolean existsLoginCi(@Param("login") String login);
+
+    @Query("select (count(u) > 0) from User u where lower(u.email) = lower(:email)")
+    boolean existsEmailCi(@Param("email") String email);
+
     boolean existsByLoginIgnoreCase(String login);
     boolean existsByEmailIgnoreCase(String email);
-
+    long countByRole_RoleId(Integer roleId);
     // для профиля (логин уникален среди «остальных»)
     boolean existsByLoginIgnoreCaseAndUserIdNot(String login, Integer userId);
 

@@ -36,4 +36,7 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Inte
     // Полезно для отладки/галереи, если пригодится
     @Query("select pi from ProductImage pi where pi.product.id = :productId order by pi.primary desc, pi.id asc")
     List<ProductImage> findAllByProductId(@Param("productId") Integer productId);
+    // плюс к тому, что уже есть
+    long countByProduct_Id(Integer productId);
+
 }

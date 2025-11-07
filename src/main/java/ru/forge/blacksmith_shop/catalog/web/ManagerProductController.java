@@ -1,6 +1,8 @@
 // src/main/java/ru/forge/blacksmith_shop/catalog/web/ManagerProductController.java
 package ru.forge.blacksmith_shop.catalog.web;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -19,6 +22,8 @@ import ru.forge.blacksmith_shop.catalog.dto.ProductForm;
 import ru.forge.blacksmith_shop.catalog.repo.CategoryRepository;
 import ru.forge.blacksmith_shop.catalog.repo.ProductImageRepository;
 import ru.forge.blacksmith_shop.catalog.repo.ProductRepository;
+import ru.forge.blacksmith_shop.catalog.service.ProductInUseException;
+import ru.forge.blacksmith_shop.catalog.service.ProductService;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,13 +37,16 @@ public class ManagerProductController {
     private final ProductRepository products;
     private final CategoryRepository categories;
     private final ProductImageRepository images;
+    private final ProductService productService;
 
     public ManagerProductController(ProductRepository products,
                                     CategoryRepository categories,
-                                    ProductImageRepository images) {
+                                    ProductImageRepository images,
+                                    ProductService productService) {
         this.products = products;
         this.categories = categories;
         this.images = images;
+        this.productService = productService;
     }
 
     // ---------- LIST ----------
@@ -73,10 +81,19 @@ public class ManagerProductController {
     // ---------- CREATE ----------
     @PostMapping("/create")
     @Transactional
-    public String create(@ModelAttribute ProductForm form,
+    public String create(@Valid @ModelAttribute("form") ProductForm form,
+                         BindingResult br,
                          @RequestParam(value = "upload", required = false) MultipartFile upload,
                          @RequestParam(value = "makePrimary", required = false, defaultValue = "false") boolean makePrimary,
+                         Model model,
                          RedirectAttributes ra) throws IOException {
+
+        if (br.hasErrors()) {
+            model.addAttribute("categories", categories.findAll());
+            model.addAttribute("images", List.of());
+            model.addAttribute("isEdit", false);
+            return "manager/products/form";
+        }
 
         Product p = new Product();
         apply(p, form);
@@ -91,7 +108,6 @@ public class ManagerProductController {
             pi.setPrimary(makePrimary);
             images.save(pi);
 
-            // если это первая картинка и флаг не проставили — делаем её главной
             if (!makePrimary) {
                 var list = images.findAllByProductIdOrder(p.getId());
                 if (list.size() == 1) {
@@ -113,44 +129,84 @@ public class ManagerProductController {
             ra.addAttribute("ok", "Товар не найден");
             return "redirect:/manager/products";
         }
+
         ProductForm form = toForm(opt.get());
+        var imgs = images.findAllByProductIdOrder(id);
+
+        Integer primaryId = imgs.stream()
+                .filter(ProductImage::isPrimary)
+                .findFirst()
+                .map(ProductImage::getId)
+                .orElse(imgs.isEmpty() ? null : imgs.get(0).getId());
+
         model.addAttribute("form", form);
         model.addAttribute("categories", categories.findAll());
-        model.addAttribute("images", images.findAllByProductIdOrder(id));
+        model.addAttribute("images", imgs);
+        model.addAttribute("primaryImageId", primaryId); // <—
         model.addAttribute("isEdit", true);
         return "manager/products/form";
     }
+
+
+
+
 
     // ---------- UPDATE ----------
     @PostMapping("/{id}/update")
     @Transactional
     public String update(@PathVariable Integer id,
-                         @ModelAttribute ProductForm form,
+                         @Valid @ModelAttribute("form") ProductForm form,
+                         BindingResult br,
+                         Model model,
                          RedirectAttributes ra) {
         Product p = products.findById(id).orElse(null);
         if (p == null) {
             ra.addAttribute("ok", "Товар не найден");
             return "redirect:/manager/products";
         }
+
         form.setId(id);
+
+        if (br.hasErrors()) {
+            var imgs = images.findAllByProductIdOrder(id);
+            Integer primaryId = imgs.stream()
+                    .filter(ProductImage::isPrimary)
+                    .findFirst()
+                    .map(ProductImage::getId)
+                    .orElse(imgs.isEmpty() ? null : imgs.get(0).getId());
+
+            model.addAttribute("categories", categories.findAll());
+            model.addAttribute("images", imgs);
+            model.addAttribute("primaryImageId", primaryId); // <—
+            model.addAttribute("isEdit", true);
+            return "manager/products/form";
+        }
+
         apply(p, form);
         products.save(p);
         ra.addAttribute("ok", "Изменения сохранены");
         return "redirect:/manager/products";
     }
 
+
     // ---------- DELETE ----------
     @PostMapping("/{id}/delete")
-    @Transactional
     public String delete(@PathVariable Integer id, RedirectAttributes ra) {
-        if (products.existsById(id)) {
-            products.deleteById(id);
-            ra.addAttribute("ok", "Товар удалён");
-        } else {
-            ra.addAttribute("ok", "Товар не найден");
+        try {
+            productService.deleteById(id);
+            ra.addFlashAttribute("ok", "Товар удалён.");  // <-- flash, не attribute
+        } catch (ProductInUseException e) {
+            ra.addFlashAttribute("error",
+                    e.getMessage() + "");
+        } catch (EntityNotFoundException e) {
+            ra.addFlashAttribute("error", "Товар не найден.");
         }
         return "redirect:/manager/products";
     }
+
+
+
+
 
     // ---------- IMAGES: upload (для edit) ----------
     @PostMapping("/{id}/images/add")

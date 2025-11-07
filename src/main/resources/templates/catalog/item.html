@@ -62,8 +62,14 @@
         .avatar{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
             font-weight:800;background:#dbeafe;color:#1e3a8a;border:1px solid #bfdbfe}
         .stars{white-space:nowrap}
-        /* липкая левая панель */
         .sticky{position:sticky;top:18px}
+
+        /* NEW: перенос длинных отзывов и сохранение переводов строк */
+        .rev p{
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 
@@ -76,8 +82,7 @@
         <a href="/products" class="muted">← Назад в каталог</a>
 
         <div class="grid">
-
-            <!-- ЛЕВАЯ КОЛОНКА: покупка (стала первой и липкой) -->
+            <!-- ЛЕВАЯ КОЛОНКА -->
             <aside class="card pad sticky">
                 <h1 class="title" th:text="${item.name}">Товар</h1>
 
@@ -87,8 +92,8 @@
                 </div>
 
                 <div class="mb12">
-          <span class="price-lg"
-                th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
+                    <span class="price-lg"
+                          th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
                     <span class="price-old"
                           th:if="${item.discountPercent != null and item.discountPercent > 0}"
                           th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</span>
@@ -117,14 +122,14 @@
                 <div class="chips">
                     <span class="chip">ID: <span th:text="${item.productId}">0</span></span>
                     <span class="chip" th:if="${item.avgRating != null}">
-            ★ <span th:text="${item.avgRating}">0</span> / 5
-          </span>
+                        ★ <span th:text="${item.avgRating}">0</span> / 5
+                    </span>
                     <span class="chip" th:if="${item.reviewsCount != null}"
                           th:text="${item.reviewsCount} + ' отзыв(ов)'">0 отзывов</span>
                 </div>
             </aside>
 
-            <!-- ПРАВАЯ КОЛОНКА: фото и описание -->
+            <!-- ПРАВАЯ КОЛОНКА -->
             <div class="card pad">
                 <img class="thumb mb20" th:src="@{|/products/${item.productId}/image|}" alt="image"/>
 
@@ -133,7 +138,6 @@
                     <p style="margin:0" th:text="${item.description}">Описание товара…</p>
                 </div>
 
-                <!-- при необходимости — характеристики -->
                 <div th:if="${specs != null}">
                     <div class="muted mb8">Характеристики</div>
                     <div style="display:grid;grid-template-columns:180px 1fr;gap:8px 18px">
@@ -142,10 +146,9 @@
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- ОТЗЫВЫ (форма теперь сверху, список ниже) -->
+        <!-- ОТЗЫВЫ -->
         <div class="card pad mb24" style="margin-top:24px">
             <div class="between mb12">
                 <h2 style="margin:0;font-size:22px">Отзывы</h2>
@@ -172,9 +175,11 @@
 
                         <div style="flex:1 1 420px">
                             <label class="muted mb8" style="display:block">Комментарий</label>
-                            <textarea class="input" name="comment" rows="3"
+                            <!-- NEW: ограничение длины ввода -->
+                            <textarea class="input" name="comment" rows="3" maxlength="300"
                                       th:text="${myReview != null ? myReview.comment : ''}"
-                                      placeholder="Поделитесь впечатлениями…"></textarea>
+                                      placeholder="Поделитесь впечатлениями… (до 300 символов)"></textarea>
+                            <div class="muted" style="margin-top:4px">До 300 символов</div>
                         </div>
                     </div>
 
@@ -198,10 +203,10 @@
                             <div class="avatar" th:text="${#strings.substring(r.userName,0,1)}">U</div>
                             <strong th:text="${r.userName}">User</strong>
                             <span class="stars" style="margin-left:6px">
-                <span th:utext="${#strings.repeat('★', (r.rating == null ? 0 : r.rating.intValue()))}"></span>
-                <span class="muted"
-                      th:utext="${#strings.repeat('☆', 5 - (r.rating == null ? 0 : r.rating.intValue()))}"></span>
-              </span>
+                                <span th:utext="${#strings.repeat('★', (r.rating == null ? 0 : r.rating.intValue()))}"></span>
+                                <span class="muted"
+                                      th:utext="${#strings.repeat('☆', 5 - (r.rating == null ? 0 : r.rating.intValue()))}"></span>
+                            </span>
                         </div>
                         <time class="muted"
                               th:text="${#temporals.format(r.createdAt.plusHours(3), 'dd.MM.yyyy HH:mm')}">дата</time>

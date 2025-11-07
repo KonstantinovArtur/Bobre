@@ -2,6 +2,7 @@
 package ru.forge.blacksmith_shop.order.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 @Entity
@@ -17,9 +18,14 @@ public class OrderAddress {
     @Column(name = "order_id")
     private Integer orderId;
 
+    @NotBlank(message = "Адрес обязателен")
+    @Size(min = 3, max = 50, message = "Длина адреса должна быть от 3 до 50 символов")
+    @Pattern(regexp = "^[\\p{L}].*$", message = "Адрес должен начинаться с буквы")
     @Column(name = "address_line", nullable = false, columnDefinition = "text")
     private String addressLine;
 
+    @DecimalMin(value = "0.00", inclusive = true, message = "Стоимость доставки не может быть отрицательной")
+    @Digits(integer = 8, fraction = 2, message = "Неверный формат стоимости доставки")
     @Column(name = "shipping_cost", precision = 10, scale = 2)
     private BigDecimal shippingCost;
 

@@ -27,4 +27,5 @@ public class AddressRepository {
             """;
         return jdbc.queryForList(sql, String.class);
     }
+
 }

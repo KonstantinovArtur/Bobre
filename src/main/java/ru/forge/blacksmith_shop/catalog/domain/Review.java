@@ -1,6 +1,7 @@
 package ru.forge.blacksmith_shop.catalog.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import ru.forge.blacksmith_shop.users.domain.User;
 
 import java.time.OffsetDateTime;
@@ -25,6 +26,7 @@ public class Review {
     private Integer rating;
 
     @Column(length = 2000)
+    @Size(max = 300, message = "Комментарий не длиннее 300 символов")
     private String comment;
 
     private OffsetDateTime createdAt;

@@ -1,0 +1,110 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Логи действий</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <style>
+        .container{max-width:1200px;margin:24px auto;padding:0 12px}
+        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px}
+        .row{display:flex;gap:12px;flex-wrap:wrap}
+        .col{flex:1}
+        label{display:block;margin-bottom:6px;color:#374151;font-weight:600}
+        input,select{width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+        table{width:100%;border-collapse:separate;border-spacing:0}
+        th,td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:top}
+        th{font-weight:600;color:#374151;background:#f8fafc}
+        .btn{padding:8px 12px;border-radius:8px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+        .btn.ghost{background:#fff;color:#111827}
+        .btn.disabled{opacity:.5;pointer-events:none}
+        .muted{color:#6b7280}
+        .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
+        pre{white-space:pre-wrap;margin:0}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Логи действий</h1>
+
+    <!-- Фильтры -->
+    <div class="card" style="margin:12px 0">
+        <form th:action="@{/admin/logs}" method="get" class="row">
+            <div class="col">
+                <label for="q">Поиск</label>
+                <input id="q" type="text" name="q" th:value="${q}" placeholder="текст/логин/операция"/>
+            </div>
+            <div class="col" style="max-width:180px">
+                <label for="userId">User ID</label>
+                <input id="userId" type="number" name="userId" th:value="${userId}"/>
+            </div>
+            <div class="col" style="max-width:220px">
+                <label for="action">Операция</label>
+                <input id="action" type="text" name="action" th:value="${actionVal}" placeholder="например: LOGIN"/>
+            </div>
+            <div class="col" style="max-width:180px">
+                <label for="from">С</label>
+                <input id="from" type="date" name="from" th:value="${from}"/>
+            </div>
+            <div class="col" style="max-width:180px">
+                <label for="to">По</label>
+                <input id="to" type="date" name="to" th:value="${to}"/>
+            </div>
+            <div class="col" style="max-width:220px;display:flex;align-items:flex-end;gap:8px">
+                <button class="btn" type="submit">Фильтровать</button>
+                <a class="btn ghost" th:href="@{/admin/logs}">Сброс</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица -->
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th style="width:160px">Время</th>
+                <th style="width:90px">User ID</th>
+                <th>Логин</th>
+                <th>Операция</th>
+                <th>Детали</th>
+                <th style="width:70px">ID</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${page.content}">
+                <!-- r.createdAt = Instant → переводим в нужную зону и форматируем -->
+                <td th:text="${#temporals.format(
+        T(java.time.LocalDateTime).ofInstant(r.createdAt, T(java.time.ZoneId).of('Europe/Amsterdam')),
+        'yyyy-MM-dd HH:mm:ss')}">
+                    2025-11-01 10:00:00
+                </td>
+
+                <td th:text="${r.userId}">3</td>
+                <td th:text="${r.userLogin}">ivan</td>
+                <td th:text="${r.operationName}">LOGIN</td>
+                <td><pre class="muted" th:text="${r.details}">-</pre></td>
+                <td th:text="${r.id}">100</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(page.content)}">
+                <td colspan="6" class="muted">Ничего не найдено</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Пагинация -->
+        <div class="pager" th:if="${page.totalPages > 1}">
+            <a class="btn ghost"
+               th:href="@{|/admin/logs?page=${page.number-1}&size=${page.size}&q=${q}&userId=${userId}&action=${actionVal}&from=${from}&to=${to}|}"
+               th:classappend="${page.first} ? ' disabled'">Назад</a>
+
+            <span class="muted" th:text="'Стр. ' + ${page.number+1} + ' из ' + ${page.totalPages}">Стр. 1 из 10</span>
+
+            <a class="btn ghost"
+               th:href="@{|/admin/logs?page=${page.number+1}&size=${page.size}&q=${q}&userId=${userId}&action=${actionVal}&from=${from}&to=${to}|}"
+               th:classappend="${page.last} ? ' disabled'">Вперёд</a>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+</body>
+</html>

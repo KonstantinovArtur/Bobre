@@ -12,25 +12,70 @@
     .btn{padding:6px 10px;border:1px solid #111827;border-radius:8px;background:#111827;color:#fff}
     .btn.ghost{background:#fff;color:#111827}
     input,select{padding:6px;border:1px solid #e5e7eb;border-radius:8px}
+    .alert-ok{background:#ecfdf5;border:1px solid #34d399;color:#065f46;border-radius:10px;padding:10px;margin:12px 0}
+    .alert-err{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;border-radius:10px;padding:10px;margin:12px 0}
+    .field-error{border-color:#ef4444}
+    .error-text{font-size:.85rem;color:#b91c1c;margin-top:4px}
+    .col{display:flex;flex-direction:column}
   </style>
 </head>
 <body>
 <div class="container">
   <h1>Админ · Пользователи</h1>
 
-  <div th:if="${ok}" class="card" th:text="${ok}"></div>
+  <!-- зеленый баннер об успехе -->
+  <div th:if="${ok}" class="flash"
+       style="background:#dcfce7;border:1px solid #86efac;color:#166534;margin-bottom:10px;padding:10px;border-radius:8px;"
+       th:text="${ok}"></div>
+
+  <div th:if="${error}" class="flash"
+       style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;margin-bottom:10px;padding:10px;border-radius:8px;"
+       th:text="${error}"></div>
 
   <!-- Создать -->
   <div class="card">
-    <form th:action="@{/admin/users/create}" method="post" class="row">
+    <form th:action="@{/admin/users/create}" th:object="${createForm}" method="post" class="row" style="flex-wrap:wrap;gap:10px">
       <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-      <input name="login" placeholder="login" required>
-      <input name="email" placeholder="email" required type="email">
-      <input name="name" placeholder="name">
-      <input name="password" placeholder="password" required type="password">
-      <select name="roleId" required>
-        <option th:each="r : ${roles}" th:value="${r.roleId}" th:text="${r.roleName}"></option>
-      </select>
+
+      <!-- сводка валидации (если надо показать список всех ошибок) -->
+      <div class="alert-err" th:if="${#fields.hasErrors('*')}" style="width:100%">
+        <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+      </div>
+
+      <!-- поля с подсветкой ошибок -->
+      <div class="col">
+        <input th:field="*{login}" placeholder="login" required
+               th:classappend="${#fields.hasErrors('login')} ? ' field-error'">
+        <div class="error-text" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
+      </div>
+
+      <div class="col">
+        <input th:field="*{email}" placeholder="email" type="email" required
+               th:classappend="${#fields.hasErrors('email')} ? ' field-error'">
+        <div class="error-text" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+      </div>
+
+      <div class="col">
+        <input th:field="*{name}" placeholder="name"
+               th:classappend="${#fields.hasErrors('name')} ? ' field-error'">
+        <div class="error-text" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+      </div>
+
+      <div class="col">
+        <input th:field="*{password}" placeholder="password" type="password" required
+               th:classappend="${#fields.hasErrors('password')} ? ' field-error'">
+        <div class="error-text" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+      </div>
+
+      <div class="col">
+        <select th:field="*{roleId}" required
+                th:classappend="${#fields.hasErrors('roleId')} ? ' field-error'">
+          <option value="" hidden>Выберите роль…</option>
+          <option th:each="r : ${roles}" th:value="${r.roleId}" th:text="${r.roleName}"></option>
+        </select>
+        <div class="error-text" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"></div>
+      </div>
+
       <button class="btn" type="submit">Добавить</button>
     </form>
   </div>

@@ -1,0 +1,173 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Админ · Аналитика</title>
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { background:#f3f4f6; margin:0; padding:20px; font-family:'Segoe UI',sans-serif; color:#111827; }
+        .container { max-width:1200px; margin:0 auto; }
+        h1 { font-size:1.8rem; margin-bottom:1rem; }
+        .card {
+            background:#fff;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            padding:16px;
+            margin-bottom:16px;
+            box-shadow:0 2px 6px rgba(0,0,0,.04);
+        }
+        .row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+        .btn {
+            padding:6px 10px;
+            border:1px solid #111827;
+            border-radius:8px;
+            background:#111827;
+            color:#fff;
+            text-decoration:none;
+            cursor:pointer;
+        }
+        .btn.ghost { background:#fff; color:#111827; }
+        form input[type="date"] {
+            padding:6px 8px;
+            border:1px solid #e5e7eb;
+            border-radius:8px;
+            background:#fff;
+        }
+        .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .full { grid-column:1 / -1; }
+        .chart-box { position:relative; height:360px; width:100%; }
+        .chart-box canvas {
+            position:absolute; inset:0;
+            width:100% !important;
+            height:100% !important;
+            display:block;
+        }
+        @media(max-width:1100px){
+            .grid { grid-template-columns:1fr; }
+            .full { grid-column:1; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Админ · Аналитика</h1>
+
+    <!-- Фильтры -->
+    <div class="card">
+        <form method="get" th:action="@{/admin/analytics}" class="row">
+            <div class="row" style="gap:8px; flex-wrap:wrap;">
+                <label>Период:</label>
+                <input type="date" name="from" th:value="${from}">
+                <input type="date" name="to"   th:value="${to}">
+                <button class="btn" type="submit">Применить</button>
+                <a class="btn ghost" th:href="@{/admin/analytics}">Сброс</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Графики -->
+    <div class="grid">
+
+        <!-- 1) Продажи по месяцам -->
+        <div class="card">
+            <div class="row">
+                <h3>Продажи по месяцам</h3>
+                <a th:href="@{/admin/analytics/export/monthly(from=${from},to=${to})}" class="btn ghost">CSV</a>
+            </div>
+            <div class="chart-box"><canvas id="salesChart"></canvas></div>
+        </div>
+
+        <!-- 2) Топ-товары -->
+        <div class="card">
+            <div class="row">
+                <h3>Топ-10 товаров (шт. и выручка)</h3>
+                <a th:href="@{/admin/analytics/export/top(from=${from},to=${to},limit=10)}" class="btn ghost">CSV</a>
+            </div>
+            <div class="chart-box"><canvas id="topChart"></canvas></div>
+        </div>
+
+        <!-- 3) Выручка по категориям -->
+        <div class="card full">
+            <div class="row">
+                <h3>Выручка по категориям</h3>
+                <a th:href="@{/admin/analytics/export/categories(from=${from},to=${to})}" class="btn ghost">CSV</a>
+            </div>
+            <div class="chart-box"><canvas id="catChart"></canvas></div>
+        </div>
+
+    </div>
+
+    <p style="margin-top:16px;">
+        <a class="btn ghost" th:href="@{/AdminPage}">← В админ-панель</a>
+    </p>
+</div>
+
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const monthlySales = [[${monthlySales}]];
+    const topProducts  = [[${topProducts}]];
+    const revByCat     = [[${revByCat}]];
+    const fmt = new Intl.NumberFormat('ru-RU');
+
+    // Продажи по месяцам
+    const salesLabels = monthlySales.map(r => r.month);
+    const salesValues = monthlySales.map(r => r.total);
+    new Chart(document.getElementById('salesChart'), {
+        type:'line',
+        data:{ labels:salesLabels, datasets:[{ label:'Сумма продаж (₽)', data:salesValues, fill:false, borderWidth:2 }] },
+        options:{ responsive:true, maintainAspectRatio:false }
+    });
+
+    // Топ-товары с двумя осями X
+    const topLabels = topProducts.map(r => r.itemName);
+    const topQty = topProducts.map(r => r.totalSold);
+    const topRev = topProducts.map(r => r.revenue);
+    new Chart(document.getElementById('topChart'), {
+        type:'bar',
+        data:{
+            labels:topLabels,
+            datasets:[
+                { label:'Продано (шт)', data:topQty, xAxisID:'xQty', borderWidth:1 },
+                { label:'Выручка (₽)', data:topRev, xAxisID:'xRev', backgroundColor:'rgba(255,99,132,0.4)' }
+            ]
+        },
+        options:{
+            indexAxis:'y',
+            responsive:true,
+            maintainAspectRatio:false,
+            scales:{
+                xQty:{ position:'bottom', title:{display:true,text:'Кол-во, шт'}, ticks:{precision:0} },
+                xRev:{ position:'top', grid:{drawOnChartArea:false}, title:{display:true,text:'Выручка, ₽'},
+                    ticks:{callback:v=>fmt.format(v)} }
+            },
+            plugins:{
+                legend:{position:'top'},
+                tooltip:{callbacks:{
+                        label:(ctx)=>{
+                            const val = ctx.parsed.x;
+                            return ctx.dataset.xAxisID==='xQty'
+                                ? `Продано: ${fmt.format(val)} шт`
+                                : `Выручка: ${fmt.format(val)} ₽`;
+                        }
+                    }}
+            }
+        }
+    });
+
+    // Выручка по категориям
+    const catLabels = revByCat.map(r => r.category);
+    const catValues = revByCat.map(r => r.revenue);
+    new Chart(document.getElementById('catChart'), {
+        type:'doughnut',
+        data:{ labels:catLabels, datasets:[{ label:'Выручка (₽)', data:catValues }] },
+        options:{ responsive:true, maintainAspectRatio:false }
+    });
+    /*]]>*/
+</script>
+</body>
+</html>

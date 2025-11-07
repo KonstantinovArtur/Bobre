@@ -1,46 +1,66 @@
-<!-- src/main/resources/templates/manager/categories/list.html -->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
     <title>Категории — менеджер</title>
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
     <style>
+        /* НЕ трогаем .container — чтобы не ломать шапку на этой странице */
+        .page-wrap{max-width:980px;margin:24px auto;padding:0 16px}
+
         .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:16px 0}
         table{width:100%;border-collapse:collapse}
         th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-        .row{display:flex;gap:8px;align-items:center}
+        .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
         .btn{padding:8px 12px;border-radius:8px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
         .btn.ghost{background:#fff;color:#111827}
         input{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+
+        /* блок с ошибками/успехом сверху */
+        .alert{padding:12px 14px;border-radius:10px;margin:12px 0;font-weight:600}
+        .alert.error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+        .alert.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+        .help{font-size:.9rem;color:#b91c1c;margin-top:6px}
     </style>
 </head>
 <body>
-<div class="container" style="max-width:800px;margin:20px auto">
+
+<div class="page-wrap">
     <h1>Категории</h1>
 
-    <div th:if="${ok}" class="card" th:text="${ok}"></div>
+    <!-- флеши -->
+    <div th:if="${error}" class="alert error" th:text="${error}"></div>
+    <div th:if="${ok}" class="alert ok" th:text="${ok}"></div>
 
+    <!-- Добавить -->
     <div class="card">
         <h3>Добавить категорию</h3>
         <form th:action="@{/manager/categories/create}" method="post" class="row" style="margin-top:8px">
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <input name="name" placeholder="Название" required/>
+            <input name="name" placeholder="Название категории" required/>
             <button class="btn" type="submit">Добавить</button>
         </form>
+        <!-- было: #httpServletRequest.getParameter(...) -->
+        <div class="help"
+             th:if="${param.name != null}"
+             th:text="'Название должно начинаться с буквы, 3–25 символов.'">
+        </div>
+
     </div>
 
+    <!-- Список -->
     <div class="card">
         <h3>Список</h3>
         <table>
             <thead>
-            <tr><th>ID</th><th>Название</th><th></th></tr>
+            <tr><th>ID</th><th>Название</th><th>Действия</th></tr>
             </thead>
             <tbody>
             <tr th:each="c : ${items}">
                 <td th:text="${c.id}">1</td>
                 <td>
-                    <form th:action="@{|/manager/categories/${c.id}/update|}" method="post" class="row">
+                    <form th:action="@{|/manager/categories/${c.id}/update|}" method="post" class="row" style="margin:0">
                         <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <input name="name" th:value="${c.name}" required style="min-width:260px"/>
                         <button class="btn" type="submit">Сохранить</button>
@@ -60,6 +80,7 @@
 
     <a class="btn ghost" th:href="@{/}">← На главную</a>
 </div>
+
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

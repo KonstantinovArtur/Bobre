@@ -12,6 +12,10 @@
         .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
         .btn.ghost{background:#fff;color:#111827}
         input[type="text"]{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+
+        /* Алерты */
+        .alert-ok{border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;border-radius:12px;padding:12px;margin:10px 0}
+        .alert-err{border:1px solid #fecaca;background:#fef2f2;color:#7f1d1d;border-radius:12px;padding:12px;margin:10px 0}
     </style>
 </head>
 <body>
@@ -19,7 +23,16 @@
 
     <h1>Роли</h1>
 
-    <div th:if="${ok}" class="card" th:text="${ok}"></div>
+    <!-- АЛЕРТЫ -->
+    <div th:if="${ok}" class="flash"
+         style="background:#dcfce7;border:1px solid #86efac;color:#166534;
+            padding:10px;border-radius:8px;margin-bottom:10px"
+         th:text="${ok}"></div>
+
+    <div th:if="${error}" class="flash"
+         style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;
+            padding:10px;border-radius:8px;margin-bottom:10px"
+         th:text="${error}"></div>
 
     <!-- Создание роли -->
     <div class="card">
@@ -27,20 +40,23 @@
         <form th:action="@{/admin/roles/create}" method="post" class="row" style="justify-content:flex-start;gap:8px">
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <!-- ВАЖНО: name="name" -->
-            <input type="text" name="name" placeholder="Название роли" required/>
+            <input type="text" name="name" placeholder="Название роли" required
+                   th:value="${param.name}"/> <!-- при возврате по redirect можно подсунуть введённое значение через ?name=... если нужно -->
             <button class="btn" type="submit">Добавить</button>
         </form>
+        <div class="muted" style="margin-top:6px">
+            Требования: от 3 до 20 символов, начинается с буквы, только буквы/цифры/`-`/`_`.
+        </div>
     </div>
 
     <!-- Список ролей -->
     <div class="card">
         <div class="muted" style="margin-bottom:8px">Всего: <span th:text="${#lists.size(roles)}">0</span></div>
 
-        <div th:each="r : ${roles}" class="row" style="padding:6px 0;border-top:1px solid #f3f4f6" th:classappend="${rStat.index == 0}? ' first'">
+        <div th:each="r, rStat : ${roles}" class="row" style="padding:6px 0;border-top:1px solid #f3f4f6">
             <!-- Редактирование названия роли -->
             <form th:action="@{|/admin/roles/${r.roleId}/rename|}" method="post" class="row" style="gap:8px;margin:0">
                 <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <!-- ВАЖНО: name="name" -->
                 <input type="text" name="name" th:value="${r.roleName}" required/>
                 <button class="btn" type="submit">Сохранить</button>
             </form>

@@ -1,19 +1,29 @@
-// src/main/java/ru/forge/blacksmith_shop/manager/dto/ProductForm.java
+// src/main/java/ru/forge/blacksmith_shop/catalog/dto/ProductForm.java
 package ru.forge.blacksmith_shop.catalog.dto;
 
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 public class ProductForm {
-    private Integer id;                 // для редактирования
+    private Integer id;
+
+    @NotBlank(message = "Название обязательно")
+    @Size(min = 3, max = 30, message = "Длина названия: от 3 до 30 символов")
+    @Pattern(regexp = "^[\\p{L}].*$", message = "Название должно начинаться с буквы")
     private String name;
+
+    @NotBlank(message = "Описание обязательно")
+    @Size(min = 3, max = 200, message = "Длина описания: от 3 до 200 символов")
+    @Pattern(regexp = "^[\\p{L}].*$", message = "Описание должно начинаться с буквы")
     private String description;
+
     private BigDecimal price;
     private Integer stockQty;
     private BigDecimal discountPercent;
     private Boolean promotional;
     private Integer categoryId;
 
-    // getters/setters
+    // getters/setters...
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
