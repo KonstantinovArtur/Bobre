@@ -2,24 +2,73 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Регистрация</title>
 
-    <!-- Локальные стили — такие же, как на логине -->
+    <!-- Базовые локальные стили (как на логине) -->
     <style>
-        .auth-wrap {max-width: 420px; margin: 32px auto; padding: 0 16px;}
-        .card {background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px;}
-        .card h1 {margin:0 0 12px; font-size:22px;}
-        .field {margin:0 0 12px;}
-        .field label {display:block; font-size:14px; color:#374151; margin-bottom:6px;}
-        .field input {width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font:inherit;}
-        .actions {margin-top:10px; display:flex; gap:8px; align-items:center;}
-        .btn {display:inline-flex; align-items:center; justify-content:center; padding:10px 14px;
-            border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;}
-        .hint {font-size:12px; color:#6b7280;}
-        .error {margin:6px 0 0; color:#b91c1c; font-size:12px;}
-        .alert {margin:0 0 12px; padding:10px 12px; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#7f1d1d;}
-        .link {color:#111827; text-decoration:underline;}
+        .auth-wrap{max-width:420px;margin:32px auto;padding:0 16px;}
+        .card{
+            background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;
+            box-shadow:0 4px 12px rgba(0,0,0,.05);transition:transform .15s, box-shadow .25s;
+        }
+        .card:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.08);}
+        .card h1{margin:0 0 12px;font-size:22px;}
+        .field{margin:0 0 12px;}
+        .field label{display:block;font-size:14px;color:#374151;margin-bottom:6px;}
+        .field input{
+            width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;background:#fff;color:#111827;
+        }
+        .field input:focus{outline:0;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.2)}
+        .actions{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;transition:.15s;}
+        .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15);}
+        .hint{font-size:12px;color:#6b7280}
+        .error{margin:6px 0 0;color:#b91c1c;font-size:12px}
+        .alert{margin:0 0 12px;padding:10px 12px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#7f1d1d}
+        .link{color:#111827;text-decoration:underline}
+        @media (max-width:480px){
+            .auth-wrap{padding:0 12px;margin:20px auto}
+            .card{padding:16px}
+        }
     </style>
+
+    <!-- Тёмная тема (в едином стиле с каталогом/товаром/корзиной/логином) -->
+    <style>
+        body.dark .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            color:#e5e7eb;
+            box-shadow:0 8px 24px rgba(0,0,0,.45);
+        }
+        body.dark .card h1{color:#e5e7eb;}
+        body.dark .field label{color:#e5e7eb;}
+        body.dark .field input{
+            background:#0b1220;color:#e5e7eb;border-color:rgba(148,163,184,.28);
+        }
+        body.dark .field input:focus{
+            border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25);
+        }
+        body.dark .btn{background:#111827;border-color:#111827;color:#fff;}
+        body.dark .btn:hover{box-shadow:0 10px 22px rgba(0,0,0,.35);}
+        body.dark .hint{color:#a3a3a3}
+        body.dark .alert{background:#3b0a0a;border-color:#7f1d1d;color:#fee2e2}
+        body.dark .link{color:#c4b5fd}
+        body.dark .link:hover{color:#ddd6fe}
+    </style>
+    <style>
+        /* фон и текст страницы для регистрации */
+        body{ background:#f5f7fa; color:#111827; transition:background .2s,color .2s; }
+        body.dark{ background:#0b1220; color:#e5e7eb; }
+    </style>
+
+
+    <!-- Мгновенное применение сохранённой темы (без мигания) -->
+    <script>
+        (function(){try{
+            if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
+        }catch(e){}})();
+    </script>
 </head>
 <body>
 
@@ -27,17 +76,17 @@
 <th:block th:replace="~{fragments/header :: header}"></th:block>
 
 <div class="auth-wrap">
-    <div class="card">
-        <h1>Регистрация</h1>
+    <div class="card" role="region" aria-labelledby="regTitle">
+        <h1 id="regTitle">Регистрация</h1>
 
-        <!-- глобальные ошибки bean-validation (например, «Пароли не совпадают») -->
+        <!-- глобальные ошибки bean-validation -->
         <div th:if="${#fields.hasGlobalErrors()}" class="alert"
              th:each="e : ${#fields.globalErrors()}" th:text="${e}">Ошибка</div>
 
-        <!-- сообщение из контроллера (на всякий случай) -->
+        <!-- сообщение из контроллера -->
         <div th:if="${error}" class="alert" th:text="${error}">Ошибка</div>
 
-        <form th:action="@{/register}" method="post" th:object="${form}">
+        <form th:action="@{/register}" method="post" th:object="${form}" novalidate>
             <input th:if="${_csrf != null}" type="hidden"
                    th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
@@ -75,8 +124,8 @@
             <div class="actions">
                 <button type="submit" class="btn">Создать аккаунт</button>
                 <span class="hint">Уже есть аккаунт?
-                    <a class="link" th:href="@{/login}">Войти</a>
-                </span>
+          <a class="link" th:href="@{/login}">Войти</a>
+        </span>
             </div>
         </form>
     </div>

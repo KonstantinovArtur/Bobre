@@ -1,0 +1,167 @@
+/* ===== БАЗА ===== */
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    transition: background .35s, color .35s;
+    padding-top:70px; /* под фикс-хедер */
+}
+
+/* ===== Светлая тема ===== */
+:root{
+    --bg:#ffffff;
+    --text:#111111;
+
+    --header-bg:#111111;     /* чёрный хедер */
+    --header-text:#ffffff;
+
+    --card-bg:#ffffff;
+    --card-text:#111111;
+    --card-border:#e5e7eb;
+    --card-shadow: 0 6px 20px rgba(0,0,0,.06);
+
+    --muted:#6b7280;
+
+    --input-bg:#ffffff;
+    --input-border:#e5e7eb;
+
+    --btn-bg:#111827;
+    --btn-text:#ffffff;
+    --btn-border:#111827;
+
+    --accent:#5b21b6;        /* ссылки/названия товара */
+    --accent-hover:#7c3aed;
+
+    /* цены */
+    --price-new:#0f172a;
+    --price-old:#9ca3af;
+    --price-muted:#6b7280;
+
+    --img-bg:#f3f4f6;
+}
+
+/* ===== Тёмная тема ===== */
+body.dark{
+    --bg:#000000;                    /* чёрный фон */
+    --text:#e5e7eb;
+
+    --header-bg:#0a1931;             /* тёмно-синий хедер */
+    --header-text:#f8fafc;
+
+    --card-bg:#0f172a;               /* глубокий тёмный для карточек */
+    --card-text:#e5e7eb;
+    --card-border:rgba(148,163,184,.16);
+    --card-shadow: 0 8px 28px rgba(0,0,0,.45);
+
+    --muted:#a1a1aa;
+
+    --input-bg:#0b1220;
+    --input-border:rgba(148,163,184,.28);
+
+    --btn-bg:#111827;
+    --btn-text:#ffffff;
+    --btn-border:#111827;
+
+    --accent:#c4b5fd;
+    --accent-hover:#ddd6fe;
+
+    --price-new:#ffffff;
+    --price-old:#cbd5e1;
+    --price-muted:#a3a3a3;
+
+    --img-bg:#0b1220;
+}
+
+/* ===== Хедер (фикс, стабильная высота) ===== */
+header{
+    position:fixed; top:0; left:0; width:100%; height:70px;
+    background:var(--header-bg); color:var(--header-text);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; z-index:1000;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15);
+    transition: background .35s, color .35s;
+}
+header a{ color:var(--header-text); text-decoration:none; margin:0 .75rem; white-space:nowrap; }
+header a:hover{ text-decoration:underline; }
+
+/* ===== Контейнер/заголовки ===== */
+.container{ max-width:1200px; margin:0 auto; padding:20px; }
+h1{ font-size:2.5rem; margin-bottom:16px; }
+
+/* ===== Панель инструментов (поиск/фильтры) ===== */
+.toolbar{ display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar input, .toolbar select{
+    padding:10px 12px; background:var(--input-bg); color:var(--text);
+    border:1px solid var(--input-border); border-radius:10px; outline:none;
+}
+.toolbar .btn--ghost{
+    background:transparent; color:var(--text);
+    border:1px solid var(--input-border);
+}
+
+/* ===== Кнопки ===== */
+.btn{
+    padding:10px 14px; border-radius:10px;
+    border:1px solid var(--btn-border);
+    background:var(--btn-bg); color:var(--btn-text);
+    cursor:pointer; transition:transform .06s, opacity .2s;
+}
+.btn:active{ transform: translateY(1px); }
+.btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+/* ===== Сетка карточек (адаптив) ===== */
+.grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap:18px;
+}
+
+/* ===== Карточка товара ===== */
+.card{
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    background:var(--card-bg);
+    color:var(--card-text);
+    overflow:hidden;
+    box-shadow: var(--card-shadow);
+    transition: transform .15s ease, box-shadow .25s ease, background .35s, color .35s;
+}
+.card:hover{ transform: translateY(-2px); }
+
+/* изображение карточки */
+.card .image{
+    width:100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    background: var(--img-bg);
+}
+
+/* контент карточки */
+.card .content{ padding:12px; }
+.card .title{
+    display:block; font-weight:700; margin-bottom:6px;
+    color:var(--accent); text-decoration:none;
+}
+.card .title:hover{ color:var(--accent-hover); }
+.card .category{ color:var(--muted); font-size:12px; margin-bottom:6px; }
+.card .row{ display:flex; align-items:center; gap:10px; }
+.price{ color:var(--price-new); font-weight:800; }
+.price-old{ color:var(--price-old); text-decoration:line-through; text-decoration-thickness:2px; }
+.price-muted, .muted{ color:var(--price-muted); }
+
+/* нижняя панель карточки */
+.card .bottom{
+    margin-top:8px; display:flex; justify-content:space-between; align-items:center;
+}
+
+/* ссылки по умолчанию внутри контента */
+a{ color:var(--accent); }
+a:hover{ color:var(--accent-hover); }
+
+/* ===== Адаптивные мелочи ===== */
+@media (max-width: 768px){
+    h1{ font-size:2rem; }
+}

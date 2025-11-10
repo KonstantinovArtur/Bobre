@@ -2,8 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Каталог</title>
+
+    <!-- Хедер-фрагмент -->
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+    <!-- Общая тема (если подключена в проекте) -->
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+
+    <!-- Стили страницы (оригинальные) -->
     <style>
         .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}
         .toolbar input, .toolbar select{padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px}
@@ -11,19 +19,118 @@
         .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
         .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;overflow:hidden}
     </style>
+
+    <!-- ДОБАВКИ: тёмная тема + АДАПТИВНОСТЬ (без изменения вида на десктопе) -->
+    <style>
+        /* Базовая обёртка */
+        .container{max-width:1200px;margin:0 auto;padding:20px;}
+        .toolbar{flex-wrap:wrap;}
+
+        /* Тёмная тема — по классу .dark на <body> */
+        body.dark{ background:#000; color:#e5e7eb; }
+
+        /* Карточки в тёмной теме */
+        body.dark .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.2) !important;
+            box-shadow:0 8px 24px rgba(0,0,0,.45);
+            color:#e5e7eb;
+        }
+        body.dark .image{ background:#0b1220 !important; }
+
+        /* Ссылки/тексты в карточках */
+        body.dark .card .content a{ color:#c4b5fd; }
+        body.dark .card .content a:hover{ color:#ddd6fe; }
+        body.dark .card .category,
+        body.dark .card small,
+        body.dark .muted{ color:#a3a3a3 !important; }
+
+        /* Цены */
+        body.dark .card .row span:first-child{ color:#ffffff !important; }   /* текущая */
+        body.dark .card .row span:nth-child(2){ color:#cbd5e1 !important; }  /* старая */
+
+        /* Поля тулбара в тёмной теме */
+        body.dark .toolbar input,
+        body.dark .toolbar select{
+            background:#0b1220;
+            color:#e5e7eb;
+            border-color:rgba(148,163,184,.28);
+        }
+        body.dark .btn.btn--ghost{
+            background:transparent;
+            color:#e5e7eb;
+            border-color:rgba(148,163,184,.28);
+        }
+
+        /* Изображение карточки */
+        .image{
+            width:100%;
+            aspect-ratio:4/3;
+            object-fit:cover;
+            background:#f3f4f6;
+        }
+        .content{padding:12px;}
+        .title{display:block;font-weight:600;margin-bottom:6px;text-decoration:none}
+        .category{color:#6b7280;font-size:12px;margin-bottom:6px}
+        .row{display:flex;align-items:center;gap:8px}
+        .bottom{margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+
+        /* ====== АДАПТИВНОСТЬ КАТАЛОГА ====== */
+        @media (max-width: 1200px){
+            .container{ max-width: 100%; padding: 16px; }
+            .grid{ grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 16px; }
+        }
+        @media (max-width: 992px){
+            .grid{ grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 14px; }
+            .toolbar{ flex-wrap: wrap; }
+            .toolbar > *{ flex: 1 1 200px; }
+            .toolbar .btn{ flex: 0 0 auto; }
+        }
+        @media (max-width: 768px){
+            h1{ font-size: 1.9rem; }
+            .grid{ grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 12px; }
+            .toolbar > *{ flex: 1 1 160px; }
+        }
+        @media (max-width: 576px){
+            h1{ font-size: 1.6rem; }
+            .grid{ grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; }
+            .toolbar{ gap: 10px; }
+            .toolbar > *{ flex: 1 1 100%; }
+            .toolbar .btn, .btn.btn--ghost{ width: 100%; }
+            .bottom{ flex-direction: column; align-items: stretch; gap: 8px; }
+            .bottom form{ width: 100%; }
+            .bottom .btn{ width: 100%; }
+        }
+        @media (max-width: 400px){
+            .grid{ grid-template-columns: 1fr; }
+            .image{ aspect-ratio: 4/3; object-fit: cover; }
+        }
+    </style>
+
+    <!-- Авто-применение сохранённой темы -->
+    <script>
+        (function(){
+            try{
+                var current = localStorage.getItem('theme');
+                if(current === 'dark'){
+                    document.documentElement.classList.remove('light');
+                    document.body.classList.add('dark');
+                }
+            }catch(e){}
+        })();
+    </script>
 </head>
 <body>
+
 <div class="container">
     <h1>Каталог</h1>
 
     <!-- Панель поиска/фильтра -->
     <form class="toolbar" method="get" th:action="@{/products}">
-        <input type="text" name="q" placeholder="Поиск по названию/описанию"
-               th:value="${q}"/>
+        <input type="text" name="q" placeholder="Поиск по названию/описанию" th:value="${q}"/>
 
         <select name="cat">
-            <option th:value="0"
-                    th:selected="${cat == null or cat == 0}">Все категории</option>
+            <option th:value="0" th:selected="${cat == null or cat == 0}">Все категории</option>
             <option th:each="c : ${categories}"
                     th:value="${c.id}"
                     th:text="${c.name}"
@@ -31,8 +138,7 @@
         </select>
 
         <button class="btn" type="submit">Найти</button>
-
-        <a class="btn" th:href="@{/products}" style="background:#fff;color:#111827;border-color:#e5e7eb">Сброс</a>
+        <a class="btn btn--ghost" th:href="@{/products}">Сброс</a>
     </form>
 
     <!-- Пусто -->
@@ -40,29 +146,28 @@
 
     <!-- Список карточек -->
     <div th:if="${!#lists.isEmpty(items)}" class="grid">
-
         <div class="card" th:each="item : ${items}">
             <a th:href="@{|/products/${item.productId}|}">
-                <img th:src="@{|/products/${item.productId}/image|}" alt=""
-                     style="width:100%;aspect-ratio:4/3;object-fit:cover;background:#f3f4f6">
+                <img class="image" th:src="@{|/products/${item.productId}/image|}" alt="">
             </a>
 
-            <div style="padding:12px">
-                <a th:href="@{|/products/${item.productId}|}" th:text="${item.name}"
-                   style="display:block;font-weight:600;margin-bottom:6px">Название товара</a>
+            <div class="content">
+                <a class="title" th:href="@{|/products/${item.productId}|}"
+                   th:text="${item.name}">Название товара</a>
 
-                <div style="color:#6b7280;font-size:12px;margin-bottom:6px"
-                     th:text="${item.categoryName}">Категория</div>
+                <div class="category" th:text="${item.categoryName}">Категория</div>
 
-                <div style="display:flex;align-items:center;gap:8px">
-                    <span th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'"
-                          style="font-weight:800"></span>
-                    <span th:if="${item.isPromotional != null and item.isPromotional}"
-                          th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'"
-                          style="color:#9ca3af;text-decoration:line-through"></span>
+                <div class="row">
+                    <span
+                            th:text="${#numbers.formatDecimal(item.priceFinal,1,'COMMA',2,'POINT')} + ' ₽'"
+                            style="font-weight:800">0 ₽</span>
+                    <span
+                            th:if="${item.isPromotional != null and item.isPromotional}"
+                            th:text="${#numbers.formatDecimal(item.price,1,'COMMA',2,'POINT')} + ' ₽'"
+                            style="color:#9ca3af;text-decoration:line-through">0 ₽</span>
                 </div>
 
-                <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+                <div class="bottom">
                     <small>
                         Остаток:
                         <span th:text="${item.stockQty != null ? item.stockQty : 0}">0</span> шт
@@ -79,10 +184,11 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
+<!-- Футер-фрагмент -->
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
 </body>
 </html>

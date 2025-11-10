@@ -2,40 +2,112 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Мои заказы</title>
+
+    <!-- Общий хедер -->
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+    <!-- Базовая светлая тема (как у вас) -->
     <style>
-        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:10px 0}
+        /* Локальный контейнер — не используем общий .container из хедера */
+        .orders-container{max-width:900px;margin:20px auto;padding:0 16px;}
+        h1{margin:0 0 14px}
+
+        .card{
+            background:#fff;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            padding:16px;
+            margin:10px 0;
+            box-shadow:0 4px 12px rgba(0,0,0,.05);
+            transition:transform .15s ease, box-shadow .25s ease;
+        }
+        .card:hover{ transform:translateY(-2px); box-shadow:0 10px 22px rgba(0,0,0,.08); }
+
         .muted{color:#6b7280}
+        .row{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+        .tot{font-weight:800;font-size:18px}
+
+        /* Плашка статуса (необязательно, но красиво) */
+        .status{
+            display:inline-flex; align-items:center; gap:6px;
+            padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px;
+            background:#f1f5f9; border:1px solid #e2e8f0; color:#0f172a;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 720px){
+            .row{ flex-direction:column; gap:10px; }
+            .tot{ font-size:16px; }
+        }
     </style>
+
+    <!-- Тёмная тема и адаптивные «добивки» в том же стиле, что у каталога/карточек -->
+    <style>
+        /* Общий фон/текст */
+        body.dark{ background:#000; color:#e5e7eb; }
+
+        /* Карточки */
+        body.dark .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            box-shadow:0 8px 24px rgba(0,0,0,.45);
+            color:#e5e7eb;
+        }
+        body.dark .muted{ color:#a3a3a3 !important; }
+
+        /* Плашка статуса */
+        body.dark .status{
+            background:#0b1220; border-color:rgba(148,163,184,.28); color:#e5e7eb;
+        }
+
+        /* Ссылки внутри карточек (если появятся) */
+        body.dark a{ color:#c4b5fd; }
+        body.dark a:hover{ color:#ddd6fe; }
+    </style>
+
+    <!-- Если хотите, можно авто-применить тему до рендера (без мигания) -->
+    <script>
+        (function(){try{
+            if(localStorage.getItem('theme')==='dark') document.documentElement.classList.remove('light'),
+                document.body.classList.add('dark');
+        }catch(e){}})();
+    </script>
 </head>
 <body>
-<div class="container" style="max-width:900px;margin:20px auto">
+<div class="orders-container">
     <h1>Мои заказы</h1>
 
     <div th:if="${#lists.isEmpty(orders)}" class="muted">Пока заказов нет.</div>
 
     <div th:each="o : ${orders}" class="card">
-        <div style="display:flex;justify-content:space-between;gap:12px">
+        <div class="row">
             <div>
-                <div><b th:text="'Заказ №' + ${o.orderId}">Заказ</b></div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <b th:text="'Заказ №' + ${o.orderId}">Заказ №0</b>
+                    <span class="status" th:text="${o.statusTitle}">Статус</span>
+                </div>
+
                 <div class="muted"
                      th:text="${#temporals.format(o.orderDate.atZoneSameInstant(T(java.time.ZoneId).of('Europe/Moscow')), 'dd.MM.yyyy HH:mm')}">
                     дата
                 </div>
-                <div th:text="${o.addressLine}">Адрес</div>
+
+                <div th:text="${o.addressLine}">Адрес доставки</div>
             </div>
-            <div style="text-align:right">
-                <div th:text="${o.statusTitle}">Статус</div>
+
+            <div style="text-align:right;min-width:220px">
                 <div class="muted">
                     Товаров: <span th:text="${o.itemsCount}">0</span><br/>
                     Доставка: <span th:text="${#numbers.formatDecimal(o.shippingCost,1,'COMMA',2,'POINT')}">0,00</span> ₽
                 </div>
-                <div style="font-weight:800;font-size:18px" th:text="${#numbers.formatDecimal(o.total,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</div>
+                <div class="tot" th:text="${#numbers.formatDecimal(o.total,1,'COMMA',2,'POINT')} + ' ₽'">0,00 ₽</div>
             </div>
         </div>
     </div>
 </div>
+
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

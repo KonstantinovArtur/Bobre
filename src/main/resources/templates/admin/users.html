@@ -2,47 +2,112 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Админ · Пользователи</title>
+
   <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+  <!-- ===== ФОН СТРАНИЦЫ (чтобы тема переключала бэкграунд) ===== -->
   <style>
-    table{width:100%;border-collapse:collapse;background:#fff}
-    th,td{border:1px solid #e5e7eb;padding:8px}
-    .row{display:flex;gap:8px;align-items:center}
-    .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:12px;margin:12px 0}
-    .btn{padding:6px 10px;border:1px solid #111827;border-radius:8px;background:#111827;color:#fff}
-    .btn.ghost{background:#fff;color:#111827}
-    input,select{padding:6px;border:1px solid #e5e7eb;border-radius:8px}
-    .alert-ok{background:#ecfdf5;border:1px solid #34d399;color:#065f46;border-radius:10px;padding:10px;margin:12px 0}
-    .alert-err{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;border-radius:10px;padding:10px;margin:12px 0}
-    .field-error{border-color:#ef4444}
-    .error-text{font-size:.85rem;color:#b91c1c;margin-top:4px}
-    .col{display:flex;flex-direction:column}
+    /* светлая тема по умолчанию */
+    body { background:#f9fafb; }
+    /* тёмная тема — как на других страницах */
+    body.dark { background:#000; }
+  </style>
+
+  <!-- ===== ЛОКАЛЬНЫЕ СТИЛИ СТРАНИЦЫ (namespaced) ===== -->
+  <style>
+    .admin-users-page{max-width:1100px;margin:0 auto;padding:24px 16px}
+
+    .admin-users-page .row{display:flex;gap:8px;align-items:center}
+    .admin-users-page .col{display:flex;flex-direction:column}
+
+    .admin-users-page .card{
+      border:1px solid #e5e7eb;border-radius:12px;background:#fff;
+      padding:12px;margin:12px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)
+    }
+
+    .admin-users-page .btn{
+      padding:8px 12px;border:1px solid #111827;border-radius:10px;
+      background:#111827;color:#fff;cursor:pointer;transition:.15s
+    }
+    .admin-users-page .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+    .admin-users-page .btn.ghost{background:#fff;color:#111827}
+
+    .admin-users-page input,
+    .admin-users-page select{
+      padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;background:#fff
+    }
+
+    .admin-users-page .field-error{border-color:#ef4444}
+    .admin-users-page .error-text{font-size:.85rem;color:#b91c1c;margin-top:4px}
+
+    .admin-users-page .alert-ok{background:#ecfdf5;border:1px solid #34d399;color:#065f46;border-radius:10px;padding:10px;margin:12px 0}
+    .admin-users-page .alert-err{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;border-radius:10px;padding:10px;margin:12px 0}
+
+    .admin-users-page .table-wrap{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-top:12px}
+    .admin-users-page .table-scroll{overflow-x:auto}
+    .admin-users-page table{width:100%;border-collapse:collapse;background:#fff}
+    .admin-users-page thead th{background:#f8fafc;color:#111827}
+    .admin-users-page th,
+    .admin-users-page td{border-top:1px solid #e5e7eb;padding:10px;text-wrap:nowrap}
+    .admin-users-page tbody tr:nth-child(odd){background:#fafafa}
+
+    @media (max-width: 900px){
+      .admin-users-page .row{flex-wrap:wrap}
+      .admin-users-page .table-wrap{border-radius:10px}
+    }
+    @media (max-width: 640px){
+      .admin-users-page th,
+      .admin-users-page td{padding:8px}
+      .admin-users-page .btn{padding:8px 10px}
+      .admin-users-page .btn.ghost{white-space:nowrap}
+    }
+
+    /* ===== ТЁМНАЯ ТЕМА ДЛЯ КОНТЕНТА ===== */
+    body.dark .admin-users-page{ color:#e5e7eb; }
+    body.dark .admin-users-page .card{
+      background:#0f172a !important;
+      border-color:rgba(148,163,184,.22) !important;
+      color:#e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.45)
+    }
+    body.dark .admin-users-page input,
+    body.dark .admin-users-page select{
+      background:#0b1220;color:#e5e7eb;border-color:rgba(148,163,184,.28)
+    }
+    body.dark .admin-users-page input:focus,
+    body.dark .admin-users-page select:focus{
+      outline:0;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25)
+    }
+    body.dark .admin-users-page .btn{background:#111827;border-color:#111827;color:#fff}
+    body.dark .admin-users-page .btn.ghost{background:transparent;color:#e5e7eb;border-color:rgba(148,163,184,.28)}
+    body.dark .admin-users-page .alert-ok{background:#052e1f;border-color:#166534;color:#d1fae5}
+    body.dark .admin-users-page .alert-err{background:#3b0a0a;border-color:#7f1d1d;color:#fee2e2}
+    body.dark .admin-users-page .table-wrap{border-color:rgba(148,163,184,.22)}
+    body.dark .admin-users-page table{background:#0f172a;color:#e5e7eb}
+    body.dark .admin-users-page thead th{background:#111827;color:#e5e7eb}
+    body.dark .admin-users-page th,
+    body.dark .admin-users-page td{border-top:1px solid rgba(148,163,184,.22)}
+    body.dark .admin-users-page tbody tr:nth-child(odd){background:#0d1426}
   </style>
 </head>
 <body>
-<div class="container">
+
+<div class="admin-users-page">
   <h1>Админ · Пользователи</h1>
 
-  <!-- зеленый баннер об успехе -->
-  <div th:if="${ok}" class="flash"
-       style="background:#dcfce7;border:1px solid #86efac;color:#166534;margin-bottom:10px;padding:10px;border-radius:8px;"
-       th:text="${ok}"></div>
+  <div th:if="${ok}" class="alert-ok" th:text="${ok}"></div>
+  <div th:if="${error}" class="alert-err" th:text="${error}"></div>
 
-  <div th:if="${error}" class="flash"
-       style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;margin-bottom:10px;padding:10px;border-radius:8px;"
-       th:text="${error}"></div>
-
-  <!-- Создать -->
   <div class="card">
-    <form th:action="@{/admin/users/create}" th:object="${createForm}" method="post" class="row" style="flex-wrap:wrap;gap:10px">
+    <form th:action="@{/admin/users/create}" th:object="${createForm}" method="post"
+          class="row" style="flex-wrap:wrap;gap:10px">
       <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-      <!-- сводка валидации (если надо показать список всех ошибок) -->
       <div class="alert-err" th:if="${#fields.hasErrors('*')}" style="width:100%">
         <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
       </div>
 
-      <!-- поля с подсветкой ошибок -->
       <div class="col">
         <input th:field="*{login}" placeholder="login" required
                th:classappend="${#fields.hasErrors('login')} ? ' field-error'">
@@ -80,41 +145,54 @@
     </form>
   </div>
 
-  <!-- Таблица -->
-  <table>
-    <thead>
-    <tr><th>ID</th><th>Логин</th><th>Имя</th><th>Email</th><th>Роль</th><th>Действия</th></tr>
-    </thead>
-    <tbody>
-    <tr th:each="u : ${users}">
-      <td th:text="${u.userId}">1</td>
-      <td th:text="${u.login}">login</td>
-      <td th:text="${u.name}">name</td>
-      <td th:text="${u.email}">mail</td>
-      <td>
-        <form th:action="@{|/admin/users/${u.userId}/role|}" method="post" class="row">
-          <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-          <select name="roleId">
-            <option th:each="r : ${roles}"
-                    th:value="${r.roleId}"
-                    th:selected="${u.role != null and u.role.roleId == r.roleId}"
-                    th:text="${r.roleName}"></option>
-          </select>
-          <button class="btn" type="submit">Сменить</button>
-        </form>
-      </td>
-      <td>
-        <form th:action="@{|/admin/users/${u.userId}/delete|}" method="post" onsubmit="return confirm('Удалить пользователя?')">
-          <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-          <button class="btn ghost" type="submit">Удалить</button>
-        </form>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Логин</th>
+          <th>Имя</th>
+          <th>Email</th>
+          <th>Роль</th>
+          <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="u : ${users}">
+          <td th:text="${u.userId}">1</td>
+          <td th:text="${u.login}">login</td>
+          <td th:text="${u.name}">name</td>
+          <td th:text="${u.email}">mail</td>
+          <td>
+            <form th:action="@{|/admin/users/${u.userId}/role|}" method="post" class="row">
+              <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <select name="roleId">
+                <option th:each="r : ${roles}"
+                        th:value="${r.roleId}"
+                        th:selected="${u.role != null and u.role.roleId == r.roleId}"
+                        th:text="${r.roleName}"></option>
+              </select>
+              <button class="btn" type="submit">Сменить</button>
+            </form>
+          </td>
+          <td>
+            <form th:action="@{|/admin/users/${u.userId}/delete|}" method="post"
+                  onsubmit="return confirm('Удалить пользователя?')">
+              <input th:if="${_csrf != null}" type="hidden"
+                     th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button class="btn ghost" type="submit">Удалить</button>
+            </form>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <p style="margin-top:12px"><a class="btn ghost" th:href="@{/}">← На главную</a></p>
 </div>
+
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

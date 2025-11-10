@@ -1,24 +1,87 @@
-<!-- src/main/resources/templates/cart/cart.html -->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Корзина</title>
+
+    <!-- Хедер-фрагмент -->
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+    <!-- БАЗОВЫЕ стили страницы (НЕ трогаем общий .container из хедера!) -->
     <style>
+        /* свой контейнер только для этой страницы */
+        .cart-container{max-width:900px;margin:20px auto;padding:0 16px;}
+        h1{margin:0 0 12px}
+
         .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px;margin:10px 0}
-        .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap}
         .muted{color:#6b7280}
-        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;transition:.15s}
+        .btn:hover{transform:translateY(-1px)}
         .btn.ghost{background:#fff;color:#111827}
         .total{font-weight:800;font-size:20px}
         select,input[type="text"],input[type="number"]{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
         .col{display:flex;flex-direction:column;gap:8px}
     </style>
+
+    <!-- ТЁМНАЯ ТЕМА + адаптив (привязано к классам страницы) -->
+    <style>
+        body.dark{ background:#000; color:#e5e7eb; }
+
+        body.dark .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            box-shadow:0 8px 24px rgba(0,0,0,.45);
+            color:#e5e7eb;
+        }
+        body.dark .muted{ color:#a3a3a3 !important; }
+
+        body.dark select,
+        body.dark input[type="text"],
+        body.dark input[type="number"]{
+            background:#0b1220;
+            color:#e5e7eb;
+            border-color:rgba(148,163,184,.28);
+        }
+        body.dark select:focus,
+        body.dark input[type="text"]:focus,
+        body.dark input[type="number"]:focus{
+            outline:0;
+            border-color:#8b5cf6;
+            box-shadow:0 0 0 3px rgba(139,92,246,.25);
+        }
+
+        body.dark .btn{ background:#111827; border-color:#111827; color:#fff; }
+        body.dark .btn:hover{ box-shadow:0 8px 20px rgba(0,0,0,.35); transform:translateY(-1px); }
+        body.dark .btn.ghost{ background:transparent; color:#e5e7eb; border-color:rgba(148,163,184,.28); }
+
+        @media (max-width: 768px){
+            .row{ flex-wrap:wrap; align-items:flex-start; }
+            .row > *{ margin-top:6px; }
+            .total{ font-size:18px; }
+            form.card{ width:100%; }
+            .btn, .btn.ghost{ white-space:nowrap; }
+        }
+        @media (max-width: 520px){
+            .btn, .btn.ghost{ width:100%; justify-content:center; }
+            .row{ gap:10px; }
+        }
+    </style>
+
+    <script>
+        (function(){
+            try{
+                var t = localStorage.getItem('theme');
+                if(t === 'dark'){ document.body.classList.add('dark'); }
+            }catch(e){}
+        })();
+    </script>
 </head>
 <body>
-<div class="container" style="max-width:900px;margin:20px auto">
+<!-- используем отдельный контейнер, чтобы не цеплять хедер -->
+<div class="cart-container">
 
     <h1>Корзина</h1>
 
@@ -66,14 +129,13 @@
                     <button class="btn ghost" type="submit">Очистить</button>
                 </form>
 
-                <!-- ✅ Оформление: адрес + доставка + submit -->
+                <!-- Оформление: адрес + submit -->
                 <form th:action="@{/cart/checkout}" method="post" class="card" style="margin:0">
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                     <div class="col" style="min-width:320px">
                         <label class="muted">Адрес доставки</label>
 
-                        <!-- Если есть сохранённые адреса — показываем select -->
                         <div th:if="${addresses != null and !#lists.isEmpty(addresses)}">
                             <select name="address" required style="width:100%">
                                 <option value="" disabled selected>Выберите адрес</option>
@@ -81,12 +143,9 @@
                             </select>
                         </div>
 
-                        <!-- Если адресов нет — даём поле ввода -->
                         <div th:if="${addresses == null or #lists.isEmpty(addresses)}">
                             <input type="text" name="address" required placeholder="Введите адрес доставки" style="width:100%"/>
                         </div>
-
-
 
                         <button class="btn" type="submit">Оформить заказ</button>
                     </div>

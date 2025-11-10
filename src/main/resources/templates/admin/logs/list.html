@@ -2,28 +2,102 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Логи действий</title>
+
+    <!-- Общий хедер -->
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+    <!-- Фон страницы под светлую/тёмную тему -->
     <style>
-        .container{max-width:1200px;margin:24px auto;padding:0 12px}
-        .card{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:16px}
-        .row{display:flex;gap:12px;flex-wrap:wrap}
-        .col{flex:1}
-        label{display:block;margin-bottom:6px;color:#374151;font-weight:600}
-        input,select{width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px}
-        table{width:100%;border-collapse:separate;border-spacing:0}
-        th,td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:top}
-        th{font-weight:600;color:#374151;background:#f8fafc}
-        .btn{padding:8px 12px;border-radius:8px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
-        .btn.ghost{background:#fff;color:#111827}
-        .btn.disabled{opacity:.5;pointer-events:none}
-        .muted{color:#6b7280}
-        .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
-        pre{white-space:pre-wrap;margin:0}
+        body { background:#f9fafb; }
+        body.dark { background:#000; }
+    </style>
+
+    <!-- Локальные стили страницы (namespaced) -->
+    <style>
+        .logs-page{max-width:1200px;margin:0 auto;padding:24px 12px}
+
+        .logs-page .card{
+            border:1px solid #e5e7eb;border-radius:12px;background:#fff;
+            padding:16px;margin:12px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)
+        }
+
+        .logs-page .row{display:flex;gap:12px;flex-wrap:wrap}
+        .logs-page .col{flex:1}
+        .logs-page label{display:block;margin-bottom:6px;color:#374151;font-weight:600}
+        .logs-page input,
+        .logs-page select{
+            width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;background:#fff
+        }
+
+        .logs-page .btn{
+            padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;
+            color:#fff;cursor:pointer;text-decoration:none;display:inline-block;transition:.15s
+        }
+        .logs-page .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+        .logs-page .btn.ghost{background:#fff;color:#111827}
+        .logs-page .btn.disabled{opacity:.5;pointer-events:none}
+
+        .logs-page .muted{color:#6b7280}
+        .logs-page pre{white-space:pre-wrap;margin:0}
+
+        /* Таблица */
+        .logs-page .table-wrap{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}
+        .logs-page .table-scroll{overflow-x:auto}
+        .logs-page table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}
+        .logs-page thead th{font-weight:600;color:#374151;background:#f8fafc}
+        .logs-page th,.logs-page td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:top}
+        .logs-page tbody tr:nth-child(odd){background:#fafafa}
+
+        .logs-page .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
+
+        /* Адаптивность */
+        @media (max-width: 860px){
+            .logs-page .row .col[style*="max-width"]{flex:1 1 220px;max-width:none!important}
+        }
+        @media (max-width: 640px){
+            .logs-page .btn,.logs-page .btn.ghost{white-space:nowrap}
+            .logs-page th,.logs-page td{padding:8px}
+        }
+        @media (max-width: 520px){
+            .logs-page .row{gap:10px}
+            .logs-page .btn,.logs-page .btn.ghost{width:100%;text-align:center}
+            .logs-page .pager{justify-content:center}
+        }
+
+        /* ===== ТЁМНАЯ ТЕМА (всё в рамках .logs-page) ===== */
+        body.dark .logs-page{ color:#e5e7eb; }
+        body.dark .logs-page .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            color:#e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.45)
+        }
+        body.dark .logs-page label{color:#cbd5e1}
+        body.dark .logs-page .muted{color:#a3a3a3!important}
+
+        body.dark .logs-page input,
+        body.dark .logs-page select{
+            background:#0b1220;color:#e5e7eb;border-color:rgba(148,163,184,.28)
+        }
+        body.dark .logs-page input:focus,
+        body.dark .logs-page select:focus{
+            outline:0;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25)
+        }
+
+        body.dark .logs-page .btn{background:#111827;border-color:#111827;color:#fff}
+        body.dark .logs-page .btn.ghost{background:transparent;color:#e5e7eb;border-color:rgba(148,163,184,.28)}
+
+        body.dark .logs-page .table-wrap{border-color:rgba(148,163,184,.22)}
+        body.dark .logs-page table{background:#0f172a;color:#e5e7eb}
+        body.dark .logs-page thead th{background:#111827;color:#e5e7eb}
+        body.dark .logs-page th,
+        body.dark .logs-page td{border-bottom:1px solid rgba(148,163,184,.22)}
+        body.dark .logs-page tbody tr:nth-child(odd){background:#0d1426}
     </style>
 </head>
 <body>
-<div class="container">
+<div class="logs-page">
     <h1>Логи действий</h1>
 
     <!-- Фильтры -->
@@ -57,54 +131,70 @@
     </div>
 
     <!-- Таблица -->
-    <div class="card">
-        <table>
-            <thead>
-            <tr>
-                <th style="width:160px">Время</th>
-                <th style="width:90px">User ID</th>
-                <th>Логин</th>
-                <th>Операция</th>
-                <th>Детали</th>
-                <th style="width:70px">ID</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="r : ${page.content}">
-                <!-- r.createdAt = Instant → переводим в нужную зону и форматируем -->
-                <td th:text="${#temporals.format(
-        T(java.time.LocalDateTime).ofInstant(r.createdAt, T(java.time.ZoneId).of('Europe/Amsterdam')),
-        'yyyy-MM-dd HH:mm:ss')}">
-                    2025-11-01 10:00:00
-                </td>
+    <div class="card table-wrap">
+        <div class="table-scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:160px">Время</th>
+                    <th style="width:90px">User ID</th>
+                    <th>Логин</th>
+                    <th>Операция</th>
+                    <th>Детали</th>
+                    <th style="width:70px">ID</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${page.content}">
+                    <!-- r.createdAt = Instant → локализация -->
+                    <td th:text="${#temporals.format(
+            T(java.time.LocalDateTime).ofInstant(r.createdAt, T(java.time.ZoneId).of('Europe/Amsterdam')),
+            'yyyy-MM-dd HH:mm:ss')}">2025-11-01 10:00:00</td>
 
-                <td th:text="${r.userId}">3</td>
-                <td th:text="${r.userLogin}">ivan</td>
-                <td th:text="${r.operationName}">LOGIN</td>
-                <td><pre class="muted" th:text="${r.details}">-</pre></td>
-                <td th:text="${r.id}">100</td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(page.content)}">
-                <td colspan="6" class="muted">Ничего не найдено</td>
-            </tr>
-            </tbody>
-        </table>
+                    <td th:text="${r.userId}">3</td>
+                    <td th:text="${r.userLogin}">ivan</td>
+                    <td th:text="${r.operationName}">LOGIN</td>
+                    <td><pre class="muted" th:text="${r.details}">-</pre></td>
+                    <td th:text="${r.id}">100</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="6" class="muted">Ничего не найдено</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Пагинация -->
-        <div class="pager" th:if="${page.totalPages > 1}">
-            <a class="btn ghost"
-               th:href="@{|/admin/logs?page=${page.number-1}&size=${page.size}&q=${q}&userId=${userId}&action=${actionVal}&from=${from}&to=${to}|}"
-               th:classappend="${page.first} ? ' disabled'">Назад</a>
+        <!-- Назад -->
+        <a class="btn ghost"
+           th:href="@{/admin/logs(
+              page=${page.number-1},
+              size=${page.size},
+              q=${q},
+              userId=${userId},
+              action=${actionVal},
+              from=${from},
+              to=${to}
+            )}"
+           th:classappend="${page.first} ? ' disabled'">Назад</a>
 
-            <span class="muted" th:text="'Стр. ' + ${page.number+1} + ' из ' + ${page.totalPages}">Стр. 1 из 10</span>
+        <!-- Вперёд -->
+        <a class="btn ghost"
+           th:href="@{/admin/logs(
+              page=${page.number+1},
+              size=${page.size},
+              q=${q},
+              userId=${userId},
+              action=${actionVal},
+              from=${from},
+              to=${to}
+            )}"
+           th:classappend="${page.last} ? ' disabled'">Вперёд</a>
 
-            <a class="btn ghost"
-               th:href="@{|/admin/logs?page=${page.number+1}&size=${page.size}&q=${q}&userId=${userId}&action=${actionVal}&from=${from}&to=${to}|}"
-               th:classappend="${page.last} ? ' disabled'">Вперёд</a>
-        </div>
     </div>
 </div>
 
+<!-- Общий футер -->
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

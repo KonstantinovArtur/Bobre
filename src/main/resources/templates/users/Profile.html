@@ -3,22 +3,82 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Профиль</title>
+
     <style>
-        .auth-wrap {max-width: 720px; margin: 32px auto; padding: 0 16px;}
-        .grid {display:grid; grid-template-columns: 1fr; gap:16px;}
-        .card {background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px;}
-        .card h2 {margin:0 0 12px; font-size:20px;}
-        .field {margin:0 0 12px;}
-        .field label {display:block; font-size:14px; color:#374151; margin-bottom:6px;}
-        .field input {width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font:inherit;}
-        .muted {color:#6b7280; font-size:12px;}
-        .btn {display:inline-flex; align-items:center; justify-content:center; padding:10px 14px;
-            border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;}
-        .error {margin:6px 0 0; color:#b91c1c; font-size:12px;}
-        .alert-ok {margin:0 0 12px; padding:10px 12px; border-radius:8px; border:1px solid #bbf7d0; background:#f0fdf4; color:#14532d;}
-        .alert-err {margin:0 0 12px; padding:10px 12px; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#7f1d1d;}
+        /* ЛОКАЛЬНАЯ вёрстка (не трогаем стили хедера) */
+        .auth-wrap{max-width:920px;margin:20px auto;padding:0 16px;}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        @media (max-width: 820px){ .grid{grid-template-columns:1fr;} }
+
+        .card{
+            background:#fff;border:1px solid #e5e7eb;border-radius:12px;
+            padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.05);
+            transition:transform .15s ease, box-shadow .25s ease;
+        }
+        .card:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.08);}
+        .card h2{margin:0 0 12px;font-size:20px}
+
+        .field{margin:0 0 12px;}
+        .field label{display:block;font-size:14px;color:#374151;margin-bottom:6px;}
+        .field input{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;background:#fff;color:#111827;}
+        .field input:focus{outline:0;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.2);}
+
+        .muted{color:#6b7280;font-size:12px;}
+        .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;transition:.15s;}
+        .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15);}
+
+        .error{margin:6px 0 0;color:#b91c1c;font-size:12px;}
+        .alert-ok{margin:0 0 12px;padding:10px 12px;border-radius:8px;border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;}
+        .alert-err{margin:0 0 12px;padding:10px 12px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#7f1d1d;}
     </style>
+
+    <!-- ТЁМНАЯ ТЕМА в том же стиле, что и каталог/товар/корзина -->
+    <style>
+        /* Общий фон/текст страницы */
+        body.dark{background:#000;color:#e5e7eb;}
+
+        /* Карточки */
+        body.dark .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            box-shadow:0 8px 24px rgba(0,0,0,.45);
+            color:#e5e7eb;
+        }
+        body.dark .card h2{color:#e5e7eb;}
+
+        /* Поля ввода */
+        body.dark .field label{color:#e5e7eb;}
+        body.dark .field input{
+            background:#0b1220;color:#e5e7eb;border-color:rgba(148,163,184,.28);
+        }
+        body.dark .field input:focus{
+            border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25);
+        }
+
+        /* Подписи/мелкий текст */
+        body.dark .muted{color:#a3a3a3 !important;}
+
+        /* Кнопки */
+        body.dark .btn{background:#111827;border-color:#111827;color:#fff;}
+        body.dark .btn:hover{box-shadow:0 10px 22px rgba(0,0,0,.35);}
+
+        /* Алерты (тёмные варианты) */
+        body.dark .alert-ok{
+            background:#052e1f;border-color:#166534;color:#d1fae5;
+        }
+        body.dark .alert-err{
+            background:#3b0a0a;border-color:#7f1d1d;color:#fee2e2;
+        }
+    </style>
+
+    <!-- Мгновенное применение сохранённой темы (без мигания) -->
+    <script>
+        (function(){try{
+            if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
+        }catch(e){}})();
+    </script>
 </head>
 <body>
 
@@ -37,7 +97,7 @@
                 Email: <b th:text="${email}">you@example.com</b> (неизменяемый)
             </div>
 
-            <!-- локальные/глобальные ошибки формы профиля -->
+            <!-- глобальные ошибки формы профиля -->
             <div th:if="${#fields.hasGlobalErrors()}" class="alert-err"
                  th:each="e : ${#fields.globalErrors()}" th:text="${e}">Ошибка</div>
 
@@ -90,7 +150,7 @@
 
                 <button type="submit" class="btn">Изменить пароль</button>
 
-                <!-- общая ошибка (например, «текущий пароль неверен») -->
+                <!-- общая ошибка -->
                 <div class="error" th:if="${#fields.hasErrors('*')}"
                      th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
             </form>

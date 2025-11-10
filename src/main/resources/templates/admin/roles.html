@@ -2,46 +2,103 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Роли</title>
+
+    <!-- Общий хедер -->
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+    <!-- Фон страницы, чтобы тема корректно переключалась -->
     <style>
-        .wrap{max-width:900px;margin:20px auto}
-        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:10px 0}
-        .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-        .muted{color:#6b7280}
-        .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer}
-        .btn.ghost{background:#fff;color:#111827}
-        input[type="text"]{padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+        body { background:#f9fafb; }
+        body.dark { background:#000; }
+    </style>
+
+    <!-- Локальные стили страницы (namespaced) -->
+    <style>
+        .roles-page{max-width:900px;margin:0 auto;padding:24px 16px}
+
+        .roles-page .card{
+            background:#fff;border:1px solid #e5e7eb;border-radius:12px;
+            padding:16px;margin:12px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)
+        }
+
+        .roles-page .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .roles-page .muted{color:#6b7280}
+
+        .roles-page input[type="text"]{
+            padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;background:#fff;
+            min-width:260px
+        }
+
+        .roles-page .btn{
+            display:inline-flex;align-items:center;gap:6px;
+            padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;
+            cursor:pointer;transition:.15s
+        }
+        .roles-page .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+        .roles-page .btn.ghost{background:#fff;color:#111827}
 
         /* Алерты */
-        .alert-ok{border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;border-radius:12px;padding:12px;margin:10px 0}
-        .alert-err{border:1px solid #fecaca;background:#fef2f2;color:#7f1d1d;border-radius:12px;padding:12px;margin:10px 0}
+        .roles-page .alert-ok{
+            border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;
+            border-radius:12px;padding:12px;margin:10px 0
+        }
+        .roles-page .alert-err{
+            border:1px solid #fecaca;background:#fef2f2;color:#7f1d1d;
+            border-radius:12px;padding:12px;margin:10px 0
+        }
+
+        /* Адаптивность */
+        @media (max-width: 720px){
+            .roles-page .row{flex-wrap:wrap;justify-content:flex-start}
+            .roles-page input[type="text"]{flex:1 1 260px}
+            .roles-page .btn,.roles-page .btn.ghost{flex:0 0 auto}
+        }
+        @media (max-width: 480px){
+            .roles-page input[type="text"]{min-width:100%}
+            .roles-page .row > form{width:100%}
+            .roles-page .row > form .btn{width:100%}
+        }
+
+        /* ===== Тёмная тема для карточек/элементов ===== */
+        body.dark .roles-page{ color:#e5e7eb; }
+        body.dark .roles-page .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            color:#e5e7eb; box-shadow:0 8px 24px rgba(0,0,0,.45)
+        }
+        body.dark .roles-page .muted{ color:#a3a3a3 !important; }
+
+        body.dark .roles-page input[type="text"]{
+            background:#0b1220;color:#e5e7eb;border-color:rgba(148,163,184,.28)
+        }
+        body.dark .roles-page input[type="text"]:focus{
+            outline:0;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25)
+        }
+
+        body.dark .roles-page .btn{background:#111827;border-color:#111827;color:#fff}
+        body.dark .roles-page .btn.ghost{background:transparent;color:#e5e7eb;border-color:rgba(148,163,184,.28)}
+
+        body.dark .roles-page .alert-ok{background:#052e1f;border-color:#166534;color:#d1fae5}
+        body.dark .roles-page .alert-err{background:#3b0a0a;border-color:#7f1d1d;color:#fee2e2}
     </style>
 </head>
 <body>
-<div class="wrap">
+<div class="roles-page">
 
     <h1>Роли</h1>
 
     <!-- АЛЕРТЫ -->
-    <div th:if="${ok}" class="flash"
-         style="background:#dcfce7;border:1px solid #86efac;color:#166534;
-            padding:10px;border-radius:8px;margin-bottom:10px"
-         th:text="${ok}"></div>
-
-    <div th:if="${error}" class="flash"
-         style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;
-            padding:10px;border-radius:8px;margin-bottom:10px"
-         th:text="${error}"></div>
+    <div th:if="${ok}" class="alert-ok" th:text="${ok}"></div>
+    <div th:if="${error}" class="alert-err" th:text="${error}"></div>
 
     <!-- Создание роли -->
     <div class="card">
         <h3 style="margin:0 0 8px">Новая роль</h3>
         <form th:action="@{/admin/roles/create}" method="post" class="row" style="justify-content:flex-start;gap:8px">
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <!-- ВАЖНО: name="name" -->
-            <input type="text" name="name" placeholder="Название роли" required
-                   th:value="${param.name}"/> <!-- при возврате по redirect можно подсунуть введённое значение через ?name=... если нужно -->
+            <input type="text" name="name" placeholder="Название роли" required th:value="${param.name}"/>
             <button class="btn" type="submit">Добавить</button>
         </form>
         <div class="muted" style="margin-top:6px">
@@ -54,14 +111,14 @@
         <div class="muted" style="margin-bottom:8px">Всего: <span th:text="${#lists.size(roles)}">0</span></div>
 
         <div th:each="r, rStat : ${roles}" class="row" style="padding:6px 0;border-top:1px solid #f3f4f6">
-            <!-- Редактирование названия роли -->
+            <!-- Редактирование -->
             <form th:action="@{|/admin/roles/${r.roleId}/rename|}" method="post" class="row" style="gap:8px;margin:0">
                 <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <input type="text" name="name" th:value="${r.roleName}" required/>
                 <button class="btn" type="submit">Сохранить</button>
             </form>
 
-            <!-- Удаление роли -->
+            <!-- Удаление -->
             <form th:action="@{|/admin/roles/${r.roleId}/delete|}" method="post" style="margin:0">
                 <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <button class="btn ghost" type="submit" onclick="return confirm('Удалить роль?')">Удалить</button>
@@ -74,6 +131,7 @@
     </div>
 </div>
 
+<!-- Общий футер -->
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 </body>
 </html>

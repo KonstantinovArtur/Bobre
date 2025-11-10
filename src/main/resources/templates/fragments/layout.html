@@ -1,3 +1,4 @@
+<!-- src/main/resources/templates/fragments/layout.html -->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
@@ -5,57 +6,75 @@
 <head>
     <meta charset="UTF-8"/>
     <title th:text="${title} ?: 'Кузница'">Кузница</title>
+
+    <!-- Подключение общих стилей -->
     <link rel="stylesheet" th:href="@{/css/site.css}">
+
+    <!-- Базовые стили страницы -->
     <style>
-        body {font-family: system-ui, Arial, sans-serif; margin: 0; background: #f9f9f9;}
-        header, footer {background: #222; color: white; padding: 10px 20px;}
-        header a, footer a {color: #fff; text-decoration: none; margin-right: 10px;}
-        header a:hover, footer a:hover {text-decoration: underline;}
-        .container {max-width: 1000px; margin: 0 auto; padding: 20px;}
-        .user-info {float: right;}
-        .card {border: 1px solid #ddd; border-radius: 8px; background: white; padding: 10px; margin: 10px 0;}
-        img.thumb {width: 64px; height: 64px; object-fit: cover; border-radius: 6px; margin-right: 8px;}
-        .low-stock {color: red;}
+        body {
+            font-family: system-ui, Arial, sans-serif;
+            margin: 0;
+            background: #f9f9f9;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        img.thumb {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+        .low-stock { color: red; }
+
+        /* Тёмная тема (унифицировано с остальными страницами) */
+        body.dark {
+            background: #0b1220;
+            color: #e5e7eb;
+        }
+        body.dark .card {
+            background: #0f172a;
+            border-color: rgba(148,163,184,.22);
+            color: #e5e7eb;
+            box-shadow: 0 8px 24px rgba(0,0,0,.45);
+        }
     </style>
+
+    <!-- Скрипт: мгновенно применяем сохранённую тему -->
+    <script>
+        (function(){
+            try {
+                if (localStorage.getItem('theme') === 'dark')
+                    document.documentElement.classList.add('dark');
+            } catch(e){}
+        })();
+    </script>
 </head>
 
 <body>
-<header>
-    <div class="container">
-        <a th:href="@{/}">🏠 Главная</a>
-        <a th:href="@{/products}">Каталог</a>
-        <a th:href="@{/contacts}">Контакты</a>
 
-        <span class="user-info">
-            <!-- Если пользователь не авторизован -->
-            <span sec:authorize="!isAuthenticated()">
-                <a th:href="@{/login}">Войти</a> |
-                <a th:href="@{/register}">Регистрация</a>
-            </span>
+<!-- ✅ Универсальный ХЕДЕР-ФРАГМЕНТ -->
+<th:block th:replace="~{fragments/header :: header}"></th:block>
 
-            <!-- Если пользователь авторизован -->
-            <span sec:authorize="isAuthenticated()">
-                👤 <b sec:authentication="name">user</b>
-                <form th:action="@{/logout}" method="post" style="display:inline; margin-left:6px">
-                    <button type="submit"
-                            style="background:none;border:none;color:#fff;cursor:pointer;text-decoration:underline">
-                        Выйти
-                    </button>
-                </form>
-            </span>
-        </span>
-    </div>
-</header>
-
-
+<!-- Контент страницы -->
 <main class="container">
     <div th:insert="${content}"></div>
 </main>
 
-<footer>
-    <div class="container">
-        © <span th:text="${T(java.time.Year).now()}">2025</span> Кузница
-    </div>
-</footer>
+<!-- Футер -->
+<th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
 </body>
 </html>

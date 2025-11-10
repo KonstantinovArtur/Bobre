@@ -6,124 +6,175 @@
     <meta charset="UTF-8"/>
     <title th:text="${title} ?: 'Кузница'">Кузница</title>
     <link rel="stylesheet" th:href="@{/css/site.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
-        :root {
-            --bg: #222;
-            --fg: #fff;
-            --hover: #333;
-            --menu-bg: #fff;
-            --menu-fg: #111;
-        }
-        body {margin:0; background:#f9f9f9; font-family: system-ui, Arial, sans-serif;}
-        header {background:var(--bg); color:var(--fg); position:sticky; top:0; z-index:100;}
-        .container {max-width:1100px; margin:0 auto; padding:10px 16px;}
-        nav.nav {display:flex; align-items:center; flex-wrap:wrap; gap:12px;}
-        nav.nav a {color:var(--fg); text-decoration:none; padding:6px 10px; border-radius:6px; font-weight:500;}
-        nav.nav a:hover {background:var(--hover);}
-        .brand {font-weight:700; display:flex; align-items:center; gap:6px;}
-        .spacer {flex:1;}
-
-        /* выпадающее меню */
-        .dropdown {position:relative;}
-        .dropdown > button {
-            background:none; border:none; color:var(--fg);
-            font:inherit; cursor:pointer; padding:6px 10px; border-radius:6px;
-        }
-        .dropdown > button:hover {background:var(--hover);}
-        .menu {
-            display:none;
-            position:absolute;
-            top:100%;
-            left:0;
-            background:#2a2a2a;           /* <-- стало тёмное меню */
-            color:#fff;                   /* <-- белый текст */
-            border-radius:8px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.3);
-            min-width:200px;
-            margin-top:6px;
-            padding:8px 0;
-            border:1px solid #3a3a3a;     /* лёгкая рамка */
+        /* ===== Цвета (как было) ===== */
+        :root{
+            --bg:#0b1220;       /* фон шапки тёмно-синий */
+            --fg:#f9fafb;       /* текст в шапке */
+            --hover:#1e293b;    /* hover у ссылок */
+            --menu-bg:#1e293b;  /* фон выпадающих меню */
+            --menu-fg:#f1f5f9;  /* текст меню */
+            --line:rgba(255,255,255,.12);
         }
 
-        .menu a {
-            display:block;
-            color:#fff;                   /* текст белый по умолчанию */
-            padding:8px 14px;
-            text-decoration:none;
-            font-weight:500;
+        /* ===== Базовые ===== */
+        body{ margin:0; font-family:system-ui, Arial, sans-serif; }
+        /* ЕДИНЫЙ отступ под фикс-хедер — чтобы контент не заезжал */
+        body{ padding-top:70px; }
+
+        /* ===== Хедер фиксированный и с жёсткой высотой ===== */
+        header.site-header{
+            position:fixed; top:0; left:0; right:0;
+            height:70px; z-index:1000;
+            background:var(--bg); color:var(--fg);
+            box-shadow:0 2px 10px rgba(0,0,0,.2);
         }
-        .menu a:hover {
-            background:#444;              /* мягкий ховер */
+        .container{ max-width:1200px; margin:0 auto; padding:0 16px; }
+
+        nav.nav{
+            height:70px;
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
         }
+        .nav-left,.nav-right{ display:flex; align-items:center; gap:12px; flex-wrap:nowrap; }
+
+        .brand{ font-weight:700; display:flex; align-items:center; gap:6px; }
+        nav.nav a{ color:var(--fg); text-decoration:none; padding:8px 10px; border-radius:8px; font-weight:600; }
+        nav.nav a:hover{ background:var(--hover); }
+
+        /* Выпадающие меню */
+        .dropdown{ position:relative; }
+        .dropdown > button{
+            background:transparent; border:0; color:var(--fg); cursor:pointer;
+            padding:8px 10px; border-radius:8px; font-weight:600;
+        }
+        .dropdown > button:hover{ background:var(--hover); }
+        .menu{
+            display:none; position:absolute; top:100%; left:0; min-width:200px;
+            background:var(--menu-bg); color:var(--menu-fg);
+            border:1px solid var(--line); border-radius:10px; padding:8px 0; margin-top:6px;
+            box-shadow:0 8px 20px rgba(0,0,0,.35);
+        }
+        .menu a{ display:block; padding:8px 14px; color:var(--menu-fg); text-decoration:none; }
+        .menu a:hover{ background:#334155; }
         .dropdown:hover .menu,
-        .dropdown:focus-within .menu {
-            display:block;
+        .dropdown:focus-within .menu{ display:block; }
+
+        /* Кнопка темы и бургер */
+        .theme-btn{
+            background:#0f172a; border:1px solid var(--line); color:#facc15;
+            border-radius:10px; padding:6px 10px; cursor:pointer; font-size:16px;
+        }
+        .burger{
+            display:none; background:transparent; border:1px solid var(--line); color:var(--fg);
+            border-radius:8px; padding:6px 10px; cursor:pointer; font-size:18px;
         }
 
-
-        /* правый блок */
-        .user {display:flex; align-items:center; gap:10px; color:var(--fg);}
-        .btn-link {background:none; border:none; color:var(--fg); cursor:pointer; padding:0; text-decoration:underline;}
-        .muted {color:#cbd5e1;}
-        @media(max-width:800px){
-            nav.nav {gap:8px;}
-            .menu {min-width:160px;}
+        /* ===== Адаптив ===== */
+        @media (max-width: 992px){
+            .nav-left{ gap:10px; }
         }
+        @media (max-width: 768px){
+            .burger{ display:inline-block; }               /* показываем бургер */
+            .nav-left{ display:none; }                     /* прячем левую навигацию */
+            .nav-open .nav-left{
+                display:flex; flex-direction:column; align-items:flex-start;
+                position:absolute; top:70px; left:0; right:0;
+                background:var(--bg); padding:10px 16px; gap:6px;
+                border-bottom:1px solid var(--line);
+            }
+            .dropdown{ width:100%; }
+            .dropdown > button, nav.nav a{ width:100%; text-align:left; }
+            .menu{ position:static; margin-top:4px; width:100%; }
+        }
+
+        /* ===== Светлая тема, если включаешь body:not(.dark) ===== */
+        body:not(.dark) header.site-header{ background:#111111; color:#fff; }
+        body:not(.dark) .menu{ background:#f8fafc; color:#111; border-color:rgba(0,0,0,.08); }
+        body:not(.dark) .menu a{ color:#111; }
+        body:not(.dark) nav.nav a:hover,
+        body:not(.dark) .dropdown > button:hover{ background:#1f2937; color:#fff; }
+        body:not(.dark) .theme-btn{ background:#ffffff; color:#111827; border-color:rgba(0,0,0,.12); }
     </style>
 </head>
 
 <body>
-<header>
+<header class="site-header">
     <div class="container">
-        <nav class="nav">
-            <a class="brand" th:href="@{/}">🏠 Главная</a>
-            <a th:href="@{/products}">Каталог</a>
-            <a th:href="@{/cart}">Корзина</a>
-            <a th:href="@{/orders}">Заказы</a>
+        <nav class="nav" id="siteNav">
+            <div class="nav-left">
+                <a class="brand" th:href="@{/}">🏠 Главная</a>
+                <a th:href="@{/products}">Каталог</a>
+                <a th:href="@{/cart}">Корзина</a>
+                <a th:href="@{/orders}">Заказы</a>
 
-            <!-- Менеджерское меню -->
-            <div class="dropdown" sec:authorize="hasAnyRole('Admin','Manager')">
-                <button>Управление ▾</button>
-                <div class="menu">
-                    <a th:href="@{/manager/products}">Товары</a>
-                    <a th:href="@{/manager/categories}">Категории</a>
-                    <a th:href="@{/manager/addresses}">Адреса</a>
-                    <a th:href="@{/manager/orders}">Заказы</a>
+                <div class="dropdown" sec:authorize="hasAnyRole('Admin','Manager')">
+                    <button>Управление ▾</button>
+                    <div class="menu">
+                        <a th:href="@{/manager/products}">Товары</a>
+                        <a th:href="@{/manager/categories}">Категории</a>
+                        <a th:href="@{/manager/addresses}">Адреса</a>
+                        <a th:href="@{/manager/orders}">Заказы</a>
+                    </div>
+                </div>
+
+                <div class="dropdown" sec:authorize="hasRole('Admin') or hasAuthority('Admin')">
+                    <button>Админ ▾</button>
+                    <div class="menu">
+                        <a th:href="@{/admin/users}">Пользователи</a>
+                        <a th:href="@{/admin/roles}">Роли</a>
+                        <a th:href="@{/admin/logs}">Логи</a>
+                        <a th:href="@{/admin/analytics}">Отчеты</a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Админское меню -->
-            <div class="dropdown" sec:authorize="hasRole('Admin') or hasAuthority('Admin')">
-                <button>Админ ▾</button>
-                <div class="menu">
-                    <a th:href="@{/admin/users}">Пользователи</a>
-                    <a th:href="@{/admin/roles}">Роли</a>
-                    <a th:href="@{/admin/logs}">Логи</a>
-                    <a th:href="@{/admin/analytics}">Отчеты</a>
+            <div class="nav-right">
+                <button class="burger" id="burgerBtn" aria-expanded="false" aria-label="Меню">☰</button>
+
+                <div class="user" style="display:flex;align-items:center;gap:10px;color:var(--fg);">
+          <span sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}">Войти</a> |
+            <a th:href="@{/register}">Регистрация</a>
+          </span>
+
+                    <span sec:authorize="isAuthenticated()">
+            👤 <b sec:authentication="name">user</b>
+            <a th:href="@{/profile}">Профиль</a>
+            <form th:action="@{/logout}" method="post" style="display:inline">
+              <input th:if="${_csrf != null}" type="hidden"
+                     th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button type="submit" class="theme-btn" style="color:#fff;border-color:var(--line);background:transparent">Выйти</button>
+            </form>
+          </span>
                 </div>
-            </div>
 
-            <div class="spacer"></div>
-
-            <!-- Пользователь -->
-            <div class="user">
-                <span sec:authorize="!isAuthenticated()">
-                    <a th:href="@{/login}">Войти</a> |
-                    <a th:href="@{/register}">Регистрация</a>
-                </span>
-
-                <span sec:authorize="isAuthenticated()">
-                    👤 <b sec:authentication="name">user</b>
-                    <a th:href="@{/profile}">Профиль</a>
-                    <form th:action="@{/logout}" method="post" style="display:inline">
-                        <input th:if="${_csrf != null}" type="hidden"
-                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                        <button type="submit" class="btn-link">Выйти</button>
-                    </form>
-                </span>
+                <button id="themeToggle" class="theme-btn" title="Переключить тему">🌞 / 🌙</button>
             </div>
         </nav>
     </div>
 </header>
 
+<script>
+    // Переключатель темы с сохранением
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggle = document.getElementById('themeToggle');
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+        toggle?.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Бургер-меню на мобильных
+        const burger = document.getElementById('burgerBtn');
+        const nav = document.getElementById('siteNav');
+        burger?.addEventListener('click', () => {
+            const open = nav.classList.toggle('nav-open');
+            burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    });
+</script>
+
+<!-- ВАШ контент ниже подключается на страницах -->
 <main class="container">

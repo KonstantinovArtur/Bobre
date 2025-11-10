@@ -1,65 +1,87 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Админ · Аналитика</title>
+
+    <!-- Общий хедер -->
     <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Фон страницы под светлую/тёмную тему -->
     <style>
-        body { background:#f3f4f6; margin:0; padding:20px; font-family:'Segoe UI',sans-serif; color:#111827; }
-        .container { max-width:1200px; margin:0 auto; }
-        h1 { font-size:1.8rem; margin-bottom:1rem; }
-        .card {
-            background:#fff;
-            border:1px solid #e5e7eb;
-            border-radius:12px;
-            padding:16px;
-            margin-bottom:16px;
-            box-shadow:0 2px 6px rgba(0,0,0,.04);
+        body { background:#f3f4f6; }
+        body.dark { background:#000; }
+    </style>
+
+    <!-- Локальные стили страницы (namespaced) -->
+    <style>
+        .analytics-page{max-width:1200px;margin:0 auto;padding:24px 12px;color:#111827}
+
+        /* карточки */
+        .analytics-page .card{
+            background:#fff;border:1px solid #e5e7eb;border-radius:12px;
+            padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.06)
         }
-        .row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-        .btn {
-            padding:6px 10px;
-            border:1px solid #111827;
-            border-radius:8px;
-            background:#111827;
-            color:#fff;
-            text-decoration:none;
-            cursor:pointer;
+
+        /* строки/кнопки/поля */
+        .analytics-page .row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+        .analytics-page .btn{
+            padding:10px 14px;border:1px solid #111827;border-radius:10px;
+            background:#111827;color:#fff;text-decoration:none;cursor:pointer;transition:.15s
         }
-        .btn.ghost { background:#fff; color:#111827; }
-        form input[type="date"] {
-            padding:6px 8px;
-            border:1px solid #e5e7eb;
-            border-radius:8px;
-            background:#fff;
+        .analytics-page .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+        .analytics-page .btn.ghost{background:#fff;color:#111827}
+        .analytics-page input[type="date"]{
+            padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font:inherit
         }
-        .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-        .full { grid-column:1 / -1; }
-        .chart-box { position:relative; height:360px; width:100%; }
-        .chart-box canvas {
-            position:absolute; inset:0;
-            width:100% !important;
-            height:100% !important;
-            display:block;
+
+        /* сетка графиков */
+        .analytics-page .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .analytics-page .full{grid-column:1 / -1}
+
+        /* контейнеры под canvas */
+        .analytics-page .chart-box{position:relative;height:360px;width:100%}
+        .analytics-page .chart-box canvas{
+            position:absolute;inset:0;width:100% !important;height:100% !important;display:block
         }
-        @media(max-width:1100px){
-            .grid { grid-template-columns:1fr; }
-            .full { grid-column:1; }
+
+        /* адаптив */
+        @media (max-width:1100px){
+            .analytics-page .grid{grid-template-columns:1fr}
+            .analytics-page .full{grid-column:1}
         }
+
+        /* ===== ТЁМНАЯ ТЕМА (карточки/поля/кнопки) ===== */
+        body.dark .analytics-page{color:#e5e7eb}
+        body.dark .analytics-page .card{
+            background:#0f172a !important;
+            border-color:rgba(148,163,184,.22) !important;
+            color:#e5e7eb;box-shadow:0 8px 24px rgba(0,0,0,.45)
+        }
+        body.dark .analytics-page input[type="date"]{
+            background:#0b1220;color:#e5e7eb;border-color:rgba(148,163,184,.28)
+        }
+        body.dark .analytics-page input[type="date"]:focus{
+            outline:0;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.25)
+        }
+        body.dark .analytics-page .btn{background:#111827;border-color:#111827;color:#fff}
+        body.dark .analytics-page .btn.ghost{background:transparent;color:#e5e7eb;border-color:rgba(148,163,184,.28)}
     </style>
 </head>
 
 <body>
-<div class="container">
+<div class="analytics-page">
     <h1>Админ · Аналитика</h1>
 
     <!-- Фильтры -->
     <div class="card">
         <form method="get" th:action="@{/admin/analytics}" class="row">
-            <div class="row" style="gap:8px; flex-wrap:wrap;">
-                <label>Период:</label>
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+                <label style="font-weight:600">Период:</label>
                 <input type="date" name="from" th:value="${from}">
                 <input type="date" name="to"   th:value="${to}">
                 <button class="btn" type="submit">Применить</button>
@@ -74,7 +96,7 @@
         <!-- 1) Продажи по месяцам -->
         <div class="card">
             <div class="row">
-                <h3>Продажи по месяцам</h3>
+                <h3 style="margin:0">Продажи по месяцам</h3>
                 <a th:href="@{/admin/analytics/export/monthly(from=${from},to=${to})}" class="btn ghost">CSV</a>
             </div>
             <div class="chart-box"><canvas id="salesChart"></canvas></div>
@@ -83,7 +105,7 @@
         <!-- 2) Топ-товары -->
         <div class="card">
             <div class="row">
-                <h3>Топ-10 товаров (шт. и выручка)</h3>
+                <h3 style="margin:0">Топ-10 товаров (шт. и выручка)</h3>
                 <a th:href="@{/admin/analytics/export/top(from=${from},to=${to},limit=10)}" class="btn ghost">CSV</a>
             </div>
             <div class="chart-box"><canvas id="topChart"></canvas></div>
@@ -92,7 +114,7 @@
         <!-- 3) Выручка по категориям -->
         <div class="card full">
             <div class="row">
-                <h3>Выручка по категориям</h3>
+                <h3 style="margin:0">Выручка по категориям</h3>
                 <a th:href="@{/admin/analytics/export/categories(from=${from},to=${to})}" class="btn ghost">CSV</a>
             </div>
             <div class="chart-box"><canvas id="catChart"></canvas></div>
@@ -100,13 +122,14 @@
 
     </div>
 
-    <p style="margin-top:16px;">
+    <p style="margin-top:16px">
         <a class="btn ghost" th:href="@{/AdminPage}">← В админ-панель</a>
     </p>
 </div>
 
 <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
+<!-- Скрипты графиков -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     const monthlySales = [[${monthlySales}]];
@@ -114,39 +137,59 @@
     const revByCat     = [[${revByCat}]];
     const fmt = new Intl.NumberFormat('ru-RU');
 
-    // Продажи по месяцам
+    // тема → цвета для Chart.js
+    function chartTheme(isDark){
+        const axis = isDark ? 'rgba(226,232,240,0.8)' : '#374151';
+        const grid = isDark ? 'rgba(148,163,184,0.25)' : 'rgba(55,65,81,0.15)';
+        const legend = isDark ? '#e5e7eb' : '#111827';
+        return { axis, grid, legend };
+    }
+    function isDark(){ return document.body.classList.contains('dark'); }
+
+    // общие опции с применением темы
+    function axisOptions(){
+        const t = chartTheme(isDark());
+        return {
+            ticks:{ color:t.axis },
+            grid:{ color:t.grid, borderColor:t.grid }
+        };
+    }
+    function legendOptions(){
+        const t = chartTheme(isDark());
+        return { labels:{ color:t.legend } };
+    }
+
+    // 1) Продажи по месяцам
     const salesLabels = monthlySales.map(r => r.month);
     const salesValues = monthlySales.map(r => r.total);
-    new Chart(document.getElementById('salesChart'), {
+    const salesChart = new Chart(document.getElementById('salesChart'), {
         type:'line',
         data:{ labels:salesLabels, datasets:[{ label:'Сумма продаж (₽)', data:salesValues, fill:false, borderWidth:2 }] },
-        options:{ responsive:true, maintainAspectRatio:false }
+        options:{
+            responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:legendOptions() },
+            scales:{ x:axisOptions(), y:axisOptions() }
+        }
     });
 
-    // Топ-товары с двумя осями X
+    // 2) Топ-товары (горизонтальный bar с двумя осями X)
     const topLabels = topProducts.map(r => r.itemName);
     const topQty = topProducts.map(r => r.totalSold);
     const topRev = topProducts.map(r => r.revenue);
-    new Chart(document.getElementById('topChart'), {
+    const topChart = new Chart(document.getElementById('topChart'), {
         type:'bar',
         data:{
             labels:topLabels,
             datasets:[
                 { label:'Продано (шт)', data:topQty, xAxisID:'xQty', borderWidth:1 },
-                { label:'Выручка (₽)', data:topRev, xAxisID:'xRev', backgroundColor:'rgba(255,99,132,0.4)' }
+                { label:'Выручка (₽)', data:topRev, xAxisID:'xRev' }
             ]
         },
         options:{
             indexAxis:'y',
-            responsive:true,
-            maintainAspectRatio:false,
-            scales:{
-                xQty:{ position:'bottom', title:{display:true,text:'Кол-во, шт'}, ticks:{precision:0} },
-                xRev:{ position:'top', grid:{drawOnChartArea:false}, title:{display:true,text:'Выручка, ₽'},
-                    ticks:{callback:v=>fmt.format(v)} }
-            },
+            responsive:true, maintainAspectRatio:false,
             plugins:{
-                legend:{position:'top'},
+                legend:legendOptions(),
                 tooltip:{callbacks:{
                         label:(ctx)=>{
                             const val = ctx.parsed.x;
@@ -155,18 +198,48 @@
                                 : `Выручка: ${fmt.format(val)} ₽`;
                         }
                     }}
+            },
+            scales:{
+                y: { ...axisOptions() },
+                xQty:{ position:'bottom', title:{display:true,text:'Кол-во, шт', color:chartTheme(isDark()).axis }, ...axisOptions(), grid:{drawOnChartArea:true, color:chartTheme(isDark()).grid}},
+                xRev:{ position:'top', title:{display:true,text:'Выручка, ₽', color:chartTheme(isDark()).axis }, ...axisOptions(), grid:{drawOnChartArea:false, color:chartTheme(isDark()).grid} }
             }
         }
     });
 
-    // Выручка по категориям
+    // 3) Выручка по категориям (doughnut)
     const catLabels = revByCat.map(r => r.category);
     const catValues = revByCat.map(r => r.revenue);
-    new Chart(document.getElementById('catChart'), {
+    const catChart = new Chart(document.getElementById('catChart'), {
         type:'doughnut',
         data:{ labels:catLabels, datasets:[{ label:'Выручка (₽)', data:catValues }] },
-        options:{ responsive:true, maintainAspectRatio:false }
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOptions() } }
     });
+
+    // реакция графиков на переключение темы (кнопка в хедере меняет body.dark)
+    const charts = [salesChart, topChart, catChart];
+    const applyTheme = () => {
+        const t = chartTheme(isDark());
+        charts.forEach(ch => {
+            if(ch.options.plugins?.legend?.labels){
+                ch.options.plugins.legend.labels.color = t.legend;
+            }
+            if(ch.options.scales){
+                Object.values(ch.options.scales).forEach(s => {
+                    if(s.ticks) s.ticks.color = t.axis;
+                    if(s.grid){ s.grid.color = t.grid; s.grid.borderColor = t.grid; }
+                    if(s.title) s.title.color = t.axis;
+                });
+            }
+            ch.update();
+        });
+    };
+
+    // наблюдаем изменение класса у body
+    const mo = new MutationObserver(applyTheme);
+    mo.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    // применяем при загрузке
+    applyTheme();
     /*]]>*/
 </script>
 </body>
