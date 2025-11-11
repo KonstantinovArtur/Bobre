@@ -110,4 +110,56 @@ public class OrderAdminRepository {
         );
         return n != null ? n : 0L;
     }
+    // src/main/java/ru/forge/blacksmith_shop/order/repo/OrderAdminRepository.java
+// ... остальные импорты и код
+
+    public List<OrderAdminRow> findAllByUserId(Integer userId) {
+        String sql = """
+        SELECT
+            order_id                                        AS orderId,
+            ('ORD-' || lpad(order_id::text, 6, '0'))        AS idOrder,
+            order_date                                      AS orderDate,
+            user_id                                         AS userId,
+            user_login                                      AS userLogin,
+            total                                           AS total,
+            address_line                                    AS addressLine,
+            shipping_cost                                   AS shippingCost,
+            UPPER(status_code)                              AS statusCode,
+            status_title                                    AS statusTitle,
+            items_count                                     AS itemsCount
+        FROM vw_orders_manager
+        WHERE user_id = ?
+        ORDER BY order_date DESC, order_id DESC
+        """;
+
+        return jdbc.query(sql, (rs, i) -> {
+            java.sql.Timestamp ts = rs.getTimestamp("orderDate");
+            java.time.LocalDateTime od = (ts != null ? ts.toLocalDateTime() : null);
+            Integer itemsCount = rs.getObject("itemsCount") == null ? null : rs.getInt("itemsCount");
+
+            return new OrderAdminRow(
+                    rs.getInt("orderId"),
+                    rs.getString("idOrder"),
+                    od,
+                    rs.getInt("userId"),
+                    rs.getString("userLogin"),
+                    rs.getBigDecimal("total"),
+                    rs.getString("addressLine"),
+                    rs.getBigDecimal("shippingCost"),
+                    rs.getString("statusCode"),
+                    rs.getString("statusTitle"),
+                    itemsCount
+            );
+        }, userId);
+    }
+
+    public boolean existsById(int orderId) {
+        Boolean ok = jdbc.queryForObject(
+                "select exists(select 1 from orders where order_id = ?)",
+                Boolean.class,
+                orderId
+        );
+        return ok != null && ok;
+    }
+
 }

@@ -7,11 +7,13 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
+
     @Bean
-    public OpenAPI api() {
-        return new OpenAPI().info(new Info()
-                .title("Blacksmith Shop API")
-                .version("v1")
-                .description("Простой CRUD для витрины и заказов"));
+    public OpenAPI blacksmithOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Blacksmith Shop API")
+                        .version("v1.0")
+                        .description("API для работы с товарами кузницы и другими модулями системы"));
     }
 }

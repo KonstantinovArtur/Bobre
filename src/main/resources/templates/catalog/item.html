@@ -302,8 +302,9 @@
 
             <!-- ПРАВАЯ КОЛОНКА -->
             <div class="card pad">
-                <img class="thumb mb20" th:src="@{|/products/${item.productId}/image|}" alt="image"/>
-
+                <a th:href="@{|/products/${item.productId}/image|}" target="_blank" rel="noopener">
+                    <img class="thumb mb20" th:src="@{|/products/${item.productId}/image|}" alt="image" title="Открыть в полном размере"/>
+                </a>
                 <div class="mb20">
                     <div class="muted mb8">Описание</div>
                     <p style="margin:0" th:text="${item.description}">Описание товара…</p>

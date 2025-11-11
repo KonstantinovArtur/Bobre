@@ -46,4 +46,35 @@ public class CartService {
         }
         cart.clear();
     }
+    @Transactional
+    public void setQty(Cart cart, Integer productId, int newQty) {
+        if (newQty < 0) throw new IllegalArgumentException("Количество не может быть отрицательным");
+
+        // найдём текущую строку
+        CartItem current = cart.getItems().stream()
+                .filter(it -> productId.equals(it.getProductId()))
+                .findFirst()
+                .orElse(null);
+
+        int oldQty = current != null ? current.getQty() : 0;
+        if (oldQty == newQty) return;
+
+        if (newQty == 0) {
+            // удалить строку и освободить весь резерв
+            removeFromCart(cart, productId);
+            return;
+        }
+
+        if (oldQty < newQty) {
+            // нужно увеличить — резервируем дельту
+            int delta = newQty - oldQty;
+            addToCart(cart, productId, delta); // внутри делает tryReserveStock(...)
+        } else {
+            // нужно уменьшить — освобождаем дельту, цену/имя не трогаем
+            int delta = oldQty - newQty;
+            if (current == null) throw new IllegalArgumentException("Строка корзины не найдена");
+            current.setQty(newQty);
+            products.releaseStock(productId, delta);
+        }
+    }
 }
