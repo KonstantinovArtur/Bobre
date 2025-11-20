@@ -7,7 +7,7 @@
 
     <style>
         :root{
-            --bg:#f6f7fb;--card:#fff;--muted:#6b7280;--text:#0f172a;--line:#e5e7eb;
+            --bg: rgb(246, 247, 251);--card:#fff;--muted:#6b7280;--text:#0f172a;--line: rgb(229, 231, 235);
             --primary:#111827;--accent:#2563eb;--chip-bg:#f1f5f9;--chip-bd:#e2e8f0;--chip-tx:#334155;
             --ok:#065f46;--low:#b91c1c;--shadow:0 10px 20px rgba(2,6,23,.06),0 2px 6px rgba(2,6,23,.04);
             --radius:16px;
@@ -347,7 +347,7 @@
 
                         <div style="flex:1 1 420px">
                             <label class="muted mb8" style="display:block">Комментарий</label>
-                            <!-- ограничение длины ввода -->
+
                             <textarea class="input" name="comment" rows="3" maxlength="300"
                                       th:text="${myReview != null ? myReview.comment : ''}"
                                       placeholder="Поделитесь впечатлениями… (до 300 символов)"></textarea>

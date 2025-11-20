@@ -175,6 +175,194 @@
         });
     });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const getUser = () => {
+            const m = document.querySelector('meta[name="app:current-user"]');
+            return m?.getAttribute('content')?.trim() || '';
+        };
+        const isTypingTarget = (el) => {
+            if (!el) return false;
+            const tag = el.tagName?.toLowerCase();
+            return ['input','textarea','select'].includes(tag) || el.isContentEditable;
+        };
+        const go = (url) => { window.location.href = url; };
+        const onLogsPage = () => location.pathname.startsWith('/admin/logs');
+        const onAnalytics = () => location.pathname.startsWith('/admin/analytics');
+
+        function exportCategoriesCsv() {
+            // пытаемся нажать кнопку на странице аналитики, если есть id
+            const btn = document.getElementById('catCsvBtn');
+            if (btn) { btn.click(); return; }
+
+            // иначе соберём URL вручную с учётом from/to из адресной строки
+            const qs = new URLSearchParams(location.search);
+            const from = qs.get('from'); const to = qs.get('to');
+            const base = '/admin/analytics/export/categories';
+            const params = new URLSearchParams();
+            if (from) params.set('from', from);
+            if (to)   params.set('to', to);
+            go(params.toString() ? `${base}?${params.toString()}` : base);
+        }
+
+        function filterLogsByCurrentUser() {
+            if (!onLogsPage()) { go('/admin/logs'); return; }
+            const username = getUser();
+            // Форма фильтра на /admin/logs есть — поля уже имеют id="q" и action=@{/admin/logs}
+            const form = document.querySelector('form[action$="/admin/logs"]') || document.querySelector('form');
+            const q = document.getElementById('q');
+            if (form && q && username) {
+                q.value = username;
+                form.submit();
+            } else {
+                // fallback: просто фокус на поле поиска
+                q?.focus();
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+
+            // Alt + Q → выход из аккаунта
+            if (e.altKey && !e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'q') {
+                e.preventDefault();
+                // подтверждение для защиты от случайного выхода
+                if (confirm('Выйти из аккаунта?')) {
+                    window.location.href = '/logout';
+                }
+                return;
+            }
+
+
+            // не перехватываем, если юзер печатает в инпутах, кроме наших "жёстких" сочетаний
+            const allowInInputs = (e.ctrlKey && e.altKey); // для Ctrl+Alt-*
+            if (isTypingTarget(e.target) && !allowInInputs) return;
+
+            // Alt + H → Главная
+            if (e.altKey && !e.ctrlKey && !e.shiftKey && key === 'h') {
+                e.preventDefault(); go('/'); return;
+            }
+
+            // Alt + P → Профиль
+            if (e.altKey && !e.ctrlKey && !e.shiftKey && key === 'p') {
+                e.preventDefault(); go('/profile'); return;
+            }
+
+            // Ctrl + Alt + L → Логи (админ)
+            if (e.ctrlKey && e.altKey && !e.shiftKey && key === 'l') {
+                e.preventDefault(); go('/admin/logs'); return;
+            }
+
+            // Ctrl + Alt + U → Фильтр логов по текущему пользователю (на /admin/logs)
+            if (e.ctrlKey && e.altKey && !e.shiftKey && key === 'u') {
+                e.preventDefault(); filterLogsByCurrentUser(); return;
+            }
+
+            // Ctrl + Alt + C → CSV «Выручка по категориям»
+            if (e.ctrlKey && e.altKey && !e.shiftKey && key === 'c') {
+                e.preventDefault(); exportCategoriesCsv(); return;
+            }
+
+            // Ctrl + Alt + N → Добавить товар (менеджер/админ)
+            if (e.ctrlKey && e.altKey && !e.shiftKey && key === 'n') {
+                e.preventDefault(); go('/manager/products/new'); return;
+            }
+        });
+    });
+</script>
+<!-- === Справка по горячим клавишам === -->
+<!-- === Справка по горячим клавишам (Ctrl + /) === -->
+<style>
+    .hotkeys-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(6px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .hotkeys-window {
+        background: #fff;
+        color: #111827;
+        border-radius: 16px;
+        padding: 24px 32px;
+        max-width: 600px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2);
+        font-family: system-ui, sans-serif;
+        animation: fadeIn .2s ease;
+    }
+    body.dark .hotkeys-window { background:#1e293b; color:#f1f5f9; }
+    .hotkeys-window h2 {
+        margin-top: 0;
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 16px;
+    }
+    .hotkeys-window table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+    .hotkeys-window td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    body.dark .hotkeys-window td { border-color:#334155; }
+    .hotkeys-window kbd {
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        border: 1px solid #cbd5e1;
+        box-shadow: inset 0 -1px 0 #cbd5e1;
+    }
+    body.dark .hotkeys-window kbd {
+        background:#334155; border-color:#475569; box-shadow:inset 0 -1px 0 #475569;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-5px);} to{opacity:1; transform:none;} }
+</style>
+
+<div id="hotkeysHelp" class="hotkeys-overlay" role="dialog" aria-modal="true">
+    <div class="hotkeys-window">
+        <h2>Горячие клавиши</h2>
+        <table>
+            <tr><td><kbd>Alt</kbd> + <kbd>H</kbd></td><td>Главная страница</td></tr>
+            <tr><td><kbd>Alt</kbd> + <kbd>P</kbd></td><td>Профиль пользователя</td></tr>
+            <tr><td><kbd>Alt</kbd> + <kbd>Q</kbd></td><td>Выход из аккаунта</td></tr>
+            <tr><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>L</kbd></td><td>Страница логов (админ)</td></tr>
+            <tr><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>U</kbd></td><td>Фильтр логов по текущему пользователю</td></tr>
+            <tr><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd></td><td>Экспорт CSV «Выручка по категориям»</td></tr>
+            <tr><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd></td><td>Добавить товар (менеджер/админ)</td></tr>
+            <tr><td><kbd>Ctrl</kbd> + <kbd>/</kbd></td><td>Открыть это окно справки</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Закрыть справку</td></tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const overlay = document.getElementById('hotkeysHelp');
+        const toggleHelp = (show) => {
+            overlay.style.display = show ? 'flex' : 'none';
+        };
+        document.addEventListener('keydown', (e) => {
+            // Ctrl + / (или Ctrl + ?)
+            if (e.ctrlKey && !e.shiftKey && (e.key === '/' || e.key === '?')) {
+                e.preventDefault();
+                toggleHelp(true);
+            }
+            // Esc — закрыть
+            if (e.key === 'Escape') toggleHelp(false);
+        });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) toggleHelp(false);
+        });
+    });
+</script>
+
+
 
 <!-- ВАШ контент ниже подключается на страницах -->
 <main class="container">

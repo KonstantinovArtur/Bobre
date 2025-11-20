@@ -112,13 +112,17 @@
         </div>
 
         <!-- 3) Выручка по категориям -->
+        <!-- 3) Выручка по категориям -->
         <div class="card full">
             <div class="row">
                 <h3 style="margin:0">Выручка по категориям</h3>
-                <a th:href="@{/admin/analytics/export/categories(from=${from},to=${to})}" class="btn ghost">CSV</a>
+                <a id="catCsvBtn"
+                   th:href="@{/admin/analytics/export/categories(from=${from},to=${to})}"
+                   class="btn ghost">CSV</a>
             </div>
             <div class="chart-box"><canvas id="catChart"></canvas></div>
         </div>
+
 
     </div>
 

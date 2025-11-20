@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Каталог</title>
 
-    <!-- Хедер-фрагмент -->
-    <th:block th:replace="~{fragments/header :: header}"></th:block>
+
 
     <!-- Общая тема (если подключена в проекте) -->
     <link rel="stylesheet" th:href="@{/css/theme.css}">
@@ -22,6 +21,7 @@
 
     <!-- ДОБАВКИ: тёмная тема + АДАПТИВНОСТЬ (без изменения вида на десктопе) -->
     <style>
+
         /* Базовая обёртка */
         .container{max-width:1200px;margin:0 auto;padding:20px;}
         .toolbar{flex-wrap:wrap;}
@@ -105,6 +105,11 @@
             .grid{ grid-template-columns: 1fr; }
             .image{ aspect-ratio: 4/3; object-fit: cover; }
         }
+        /* ===== Светлая тема — ЧИСТО БЕЛЫЙ ФОН ===== */
+        body:not(.dark) {
+            background: #ffffff !important;
+        }
+
     </style>
 
     <!-- Авто-применение сохранённой темы -->
@@ -121,7 +126,7 @@
     </script>
 </head>
 <body>
-
+<div th:replace="~{fragments/header :: header}"></div>
 <div class="container">
     <h1>Каталог</h1>
 

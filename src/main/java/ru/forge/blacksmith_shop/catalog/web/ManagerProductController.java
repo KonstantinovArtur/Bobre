@@ -194,7 +194,7 @@ public class ManagerProductController {
     public String delete(@PathVariable Integer id, RedirectAttributes ra) {
         try {
             productService.deleteById(id);
-            ra.addFlashAttribute("ok", "Товар удалён.");  // <-- flash, не attribute
+            ra.addFlashAttribute("ok", "Товар удалён.");
         } catch (ProductInUseException e) {
             ra.addFlashAttribute("error",
                     e.getMessage() + "");
